@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package octoback.core.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/kiliandbigblue/octoback/core/v1;core";
+
+// GroceryList represents a list of grocery items.
+message GroceryList {
+    string id = 1 [(buf.validate.field).string.pattern = "^gl_[[:alnum:]]{8}$"];
+    string name = 2;
+    repeated GroceryItem items = 3;
+}
+
+// GroceryItem represents a single grocery item.
+message GroceryItem {
+    string id = 1 [(buf.validate.field).string.pattern = "^gi_[[:alnum:]]{8}$"];
+    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    int32 quantity = 3;
+    bool checked = 4;
+}

@@ -4,7 +4,7 @@ managed:
   go_package_prefix:
     default: github.com/kiliandbigblue/octoback/gen/proto/go
     except:
-      - buf.build/envoyproxy/protoc-gen-validate
+      - buf.build/bufbuild/protovalidate
 plugins:
   - name: go
     out: gen/proto/go
@@ -13,7 +13,6 @@ plugins:
     out: gen/proto/go
     opt:
       - paths=source_relative
-      - require_unimplemented_servers=false
   - name: validate
     out: gen/proto/go
     opt:

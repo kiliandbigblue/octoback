@@ -3,6 +3,7 @@ module github.com/kiliandbigblue/octoback
 go 1.21.3
 
 require (
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.31.0-20231106192134-1baebb0a1518.2
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 )

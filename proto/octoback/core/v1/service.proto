@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package octoback.core.v1;
 
-// import "groceries.proto";
+import "octoback/core/v1/groceries.proto";
 
 option go_package = "github.com/kiliandbigblue/octoback/core/v1;core";
 
@@ -19,5 +19,5 @@ message GetGroceryListRequest {
 
 message GetGroceryListResponse {
     // The grocery list.
-    string grocery_list = 1;
+    GroceryList grocery_list = 1;
 }
