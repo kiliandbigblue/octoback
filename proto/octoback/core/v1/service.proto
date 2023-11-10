@@ -6,6 +6,7 @@ package octoback.core.v1;
 
 option go_package = "github.com/kiliandbigblue/octoback/core/v1;core";
 
+// Service is the core service.
 service Service {
     // Get the grocery list.
     rpc GetGroceryList(GetGroceryListRequest) returns (GetGroceryListResponse);

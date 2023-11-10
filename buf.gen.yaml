@@ -19,8 +19,3 @@ plugins:
     opt:
       - lang=go
       - paths=source_relative
-  - name: zap
-    out: gen/proto/go
-    opt:
-      - lang=go
-      - paths=source_relative
