@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package octoback.core.v1;
+
+// import "groceries.proto";
+
+option go_package = "github.com/kiliandbigblue/octoback/core/v1;core";
+
+service Service {
+    // Get the grocery list.
+    rpc GetGroceryList(GetGroceryListRequest) returns (GetGroceryListResponse);
+}
+
+message GetGroceryListRequest {
+    // The ID of the grocery list to get.
+    string id = 1;
+}
+
+message GetGroceryListResponse {
+    // The grocery list.
+    string grocery_list = 1;
+}
