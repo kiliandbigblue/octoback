@@ -71,6 +71,9 @@ linters-settings:
   whitespace:
     multi-if: false # Enforces newlines (or comments) after every multi-line if statement
     multi-func: false # Enforces newlines (or comments) after every multi-line function signature
+  wrapcheck:
+    ignorePackageGlobs:
+      - google.golang.org/grpc/status
   wsl:
     # Allow declarations (var) to be cuddled.
     allow-cuddle-declarations: true
