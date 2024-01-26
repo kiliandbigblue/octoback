@@ -25,7 +25,11 @@ func main() {
 
 	db, _ := os.OpenFile("database.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o666) //nolint:gosec //Permissive permissions.
 
-	fs := corev1.NewFileSystemGroceryStore(db)
+	fs, err := corev1.NewFileSystemGroceryStore(db)
+	if err != nil {
+		log.Fatal("failed to create file system grocery store", zap.Error(err))
+	}
+
 	models.RegisterServiceServer(s, corev1.NewService(log, fs))
 
 	reflection.Register(s)

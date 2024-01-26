@@ -19,6 +19,17 @@ func (e *StoreValidationError) Error() string {
 	return "store validation error"
 }
 
+type StoreInternalError struct {
+	Err error
+}
+
+func (e *StoreInternalError) Error() string {
+	if e.Err != nil {
+		return e.Err.Error()
+	}
+	return "store internal error"
+}
+
 //go:generate mockery --name Store
 type Store interface {
 	GroceryLists() ([]*models.GroceryList, error)
