@@ -2,43 +2,52 @@ package v1
 
 import (
 	"encoding/json"
-	"io"
+	"os"
+	"slices"
 
 	"github.com/bufbuild/protovalidate-go"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1"
+	"github.com/pkg/errors"
 )
 
 type FileSystemGroceryStore struct {
-	database io.ReadWriteSeeker
+	database *json.Encoder
+	data     GroceryLists
 	v        *protovalidate.Validator
 }
 
-func NewFileSystemGroceryStore(database io.ReadWriteSeeker) *FileSystemGroceryStore {
+func NewFileSystemGroceryStore(file *os.File) (*FileSystemGroceryStore, error) {
 	v, _ := protovalidate.New()
-	return &FileSystemGroceryStore{
-		database: database,
-		v:        v,
+
+	if err := initializeFileSystemStoreFile(file); err != nil {
+		return nil, errors.Wrapf(err, "failed to initialize file %s", file.Name())
 	}
+
+	data, err := NewGroceryLists(file)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to load grocery lists from file %s", file.Name())
+	}
+
+	return &FileSystemGroceryStore{
+		database: json.NewEncoder(&tape{file}),
+		data:     data,
+		v:        v,
+	}, nil
 }
 
+// GroceryLists returns all grocery lists.
+//
+//nolint:unparam //error is always nil.
 func (f *FileSystemGroceryStore) GroceryLists() ([]*models.GroceryList, error) {
-	_, _ = f.database.Seek(0, 0)
-	return NewGroceryLists(f.database)
+	return f.data, nil
 }
 
 func (f *FileSystemGroceryStore) GroceryList(id string) (*models.GroceryList, error) {
-	gls, err := f.GroceryLists()
-	if err != nil {
-		return nil, err
+	gl := f.data.Find(id)
+	if gl == nil {
+		return nil, ErrNoSuchEntity
 	}
-
-	for _, gl := range gls {
-		if gl.Id == id {
-			return gl, nil
-		}
-	}
-
-	return nil, ErrNoSuchEntity
+	return gl, nil
 }
 
 func (f *FileSystemGroceryStore) SetGroceryList(r *models.GroceryList) error {
@@ -46,39 +55,27 @@ func (f *FileSystemGroceryStore) SetGroceryList(r *models.GroceryList) error {
 		return &StoreValidationError{Err: err}
 	}
 
-	gls, err := f.GroceryLists()
-	if err != nil {
-		return err
+	gl := f.data.Find(r.GetId())
+	switch {
+	case gl != nil:
+		gl.Name = r.GetName()
+		gl.Items = r.GetItems()
+	case gl == nil:
+		f.data = append(f.data, r)
 	}
 
-	var found bool
-	for i, gl := range gls {
-		if gl.Id == r.GetId() {
-			gls[i] = r
-			found = true
-			break
-		}
+	if err := f.flush(); err != nil {
+		return &StoreInternalError{Err: err}
 	}
-	if !found {
-		gls = append(gls, r)
-	}
-
-	_, _ = f.database.Seek(0, 0)
-	_ = json.NewEncoder(f.database).Encode(gls)
 
 	return nil
 }
 
 func (f *FileSystemGroceryStore) DeleteGroceryList(id string) error {
-	gls, err := f.GroceryLists()
-	if err != nil {
-		return err
-	}
-
 	var found bool
-	for i, gl := range gls {
+	for i, gl := range f.data {
 		if gl.Id == id {
-			gls = append(gls[:i], gls[i+1:]...)
+			f.data[i] = f.data[len(f.data)-1]
 			found = true
 			break
 		}
@@ -86,9 +83,52 @@ func (f *FileSystemGroceryStore) DeleteGroceryList(id string) error {
 	if !found {
 		return ErrNoSuchEntity
 	}
+	f.data = f.data[:len(f.data)-1]
 
-	_, _ = f.database.Seek(0, 0)
-	_ = json.NewEncoder(f.database).Encode(gls)
+	if err := f.flush(); err != nil {
+		return &StoreInternalError{Err: err}
+	}
+
+	return nil
+}
+
+func (f *FileSystemGroceryStore) flush() error {
+	slices.SortStableFunc(f.data, func(lhs, rhs *models.GroceryList) int {
+		switch {
+		case lhs.GetId() < rhs.GetId():
+			return -1
+		case lhs.GetId() > rhs.GetId():
+			return 1
+		default:
+			return 0
+		}
+	})
+
+	if err := f.database.Encode(f.data); err != nil {
+		return &StoreInternalError{Err: err}
+	}
+	return nil
+}
+
+func initializeFileSystemStoreFile(file *os.File) error {
+	if _, err := file.Seek(0, 0); err != nil {
+		return errors.Wrapf(err, "failed to seek file %s", file.Name())
+	}
+
+	info, err := file.Stat()
+	if err != nil {
+		return errors.Wrapf(err, "failed to stat file %s", file.Name())
+	}
+
+	if info.Size() == 0 {
+		if _, err := file.WriteString("[]"); err != nil {
+			return errors.Wrapf(err, "failed to write to file %s", file.Name())
+		}
+
+		if _, err := file.Seek(0, 0); err != nil {
+			return errors.Wrapf(err, "failed to seek file %s", file.Name())
+		}
+	}
 
 	return nil
 }
