@@ -17,14 +17,19 @@ func main() {
 		panic(err)
 	}
 
+	log.Info("grpc-ping: starting server...")
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
+		log.Info("Defaulting to port %s", zap.String("port", port))
 	}
-	lis, err := net.Listen("tcp", "localhost:"+port)
+
+	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Fatal("failed to listen", zap.Error(err))
+		log.Fatal("net.Listen: %v", zap.Error(err))
 	}
+
 	s := grpc.NewServer()
 
 	db, _ := os.OpenFile("database.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o666) //nolint:gosec //Permissive permissions.
@@ -38,7 +43,7 @@ func main() {
 
 	reflection.Register(s)
 	log.Info("Starting server", zap.String("port", port))
-	if err := s.Serve(lis); err != nil {
+	if err := s.Serve(listener); err != nil {
 		log.Fatal("failed to serve", zap.Error(err))
 	}
 }
