@@ -17,7 +17,11 @@ func main() {
 		panic(err)
 	}
 
-	lis, err := net.Listen("tcp", "localhost:50051")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	lis, err := net.Listen("tcp", "localhost:"+port)
 	if err != nil {
 		log.Fatal("failed to listen", zap.Error(err))
 	}
@@ -33,6 +37,7 @@ func main() {
 	models.RegisterServiceServer(s, corev1.NewService(log, fs))
 
 	reflection.Register(s)
+	log.Info("Starting server", zap.String("port", port))
 	if err := s.Serve(lis); err != nil {
 		log.Fatal("failed to serve", zap.Error(err))
 	}
