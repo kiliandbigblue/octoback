@@ -8,6 +8,7 @@ package corev1
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -113,21 +114,24 @@ type ServiceServer interface {
 }
 
 // UnimplementedServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedServiceServer struct {
-}
+type UnimplementedServiceServer struct{}
 
 func (UnimplementedServiceServer) GetGroceryList(context.Context, *GetGroceryListRequest) (*GetGroceryListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroceryList not implemented")
 }
+
 func (UnimplementedServiceServer) CreateGroceryList(context.Context, *CreateGroceryListRequest) (*CreateGroceryListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroceryList not implemented")
 }
+
 func (UnimplementedServiceServer) UpdateGroceryList(context.Context, *UpdateGroceryListRequest) (*UpdateGroceryListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroceryList not implemented")
 }
+
 func (UnimplementedServiceServer) ListGroceryLists(context.Context, *ListGroceryListsRequest) (*ListGroceryListsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGroceryLists not implemented")
 }
+
 func (UnimplementedServiceServer) DeleteGroceryList(context.Context, *DeleteGroceryListRequest) (*DeleteGroceryListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroceryList not implemented")
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"connectrpc.com/connect"
 	"github.com/bufbuild/protovalidate-go"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1"
 	"github.com/segmentio/ksuid"
@@ -16,8 +17,6 @@ type Service struct {
 	log   *zap.Logger
 	store Store
 	v     *protovalidate.Validator
-
-	models.UnimplementedServiceServer
 }
 
 func NewService(log *zap.Logger, store Store) *Service {
@@ -30,28 +29,28 @@ func NewService(log *zap.Logger, store Store) *Service {
 }
 
 // GetGroceryList returns a grocery list by its ID.
-func (s *Service) GetGroceryList(_ context.Context, request *models.GetGroceryListRequest) (*models.GetGroceryListResponse, error) {
+func (s *Service) GetGroceryList(_ context.Context, request *connect.Request[models.GetGroceryListRequest]) (*connect.Response[models.GetGroceryListResponse], error) {
 	s.log.Info("GetGroceryList")
 
-	gli, err := s.store.GroceryList(request.GetId())
+	gli, err := s.store.GroceryList(request.Msg.GetId())
 	if err != nil {
 		if errors.Is(err, ErrNoSuchEntity) {
 			return nil, status.Error(codes.NotFound, "grocery list not found")
 		}
 		panic(err)
 	}
-	return &models.GetGroceryListResponse{
+	return connect.NewResponse(&models.GetGroceryListResponse{
 		GroceryList: gli,
-	}, nil
+	}), nil
 }
 
 // Create a grocery list.
-func (s *Service) CreateGroceryList(_ context.Context, request *models.CreateGroceryListRequest) (*models.CreateGroceryListResponse, error) {
+func (s *Service) CreateGroceryList(_ context.Context, request *connect.Request[models.CreateGroceryListRequest]) (*connect.Response[models.CreateGroceryListResponse], error) {
 	s.log.Info("CreateGroceryList")
 
 	gl := &models.GroceryList{
 		Id:   "gl_" + ksuid.New().String()[:8],
-		Name: request.GetName(),
+		Name: request.Msg.GetName(),
 	}
 
 	if err := s.store.SetGroceryList(gl); err != nil {
@@ -62,17 +61,17 @@ func (s *Service) CreateGroceryList(_ context.Context, request *models.CreateGro
 		panic(err)
 	}
 
-	return &models.CreateGroceryListResponse{
+	return connect.NewResponse(&models.CreateGroceryListResponse{
 		GroceryList: gl,
-	}, nil
+	}), nil
 }
 
 // Update a grocery list.
-func (s *Service) UpdateGroceryList(_ context.Context, request *models.UpdateGroceryListRequest) (*models.UpdateGroceryListResponse, error) {
+func (s *Service) UpdateGroceryList(_ context.Context, request *connect.Request[models.UpdateGroceryListRequest]) (*connect.Response[models.UpdateGroceryListResponse], error) {
 	s.log.Info("UpdateGroceryList")
 
 	fields := map[string]struct{}{}
-	for _, field := range request.GetUpdateMask().GetPaths() {
+	for _, field := range request.Msg.GetUpdateMask().GetPaths() {
 		switch field {
 		case "name", "items":
 			fields[field] = struct{}{}
@@ -82,7 +81,7 @@ func (s *Service) UpdateGroceryList(_ context.Context, request *models.UpdateGro
 		return nil, status.Error(codes.InvalidArgument, "invalid mask")
 	}
 
-	gl, err := s.store.GroceryList(request.GetGroceryList().GetId())
+	gl, err := s.store.GroceryList(request.Msg.GetGroceryList().GetId())
 	if err != nil {
 		if errors.Is(err, ErrNoSuchEntity) {
 			return nil, status.Error(codes.NotFound, "grocery list not found")
@@ -91,10 +90,10 @@ func (s *Service) UpdateGroceryList(_ context.Context, request *models.UpdateGro
 	}
 
 	if _, ok := fields["name"]; ok {
-		gl.Name = request.GetGroceryList().GetName()
+		gl.Name = request.Msg.GetGroceryList().GetName()
 	}
 	if _, ok := fields["items"]; ok {
-		gl.Items = request.GetGroceryList().GetItems()
+		gl.Items = request.Msg.GetGroceryList().GetItems()
 	}
 
 	if err := s.store.SetGroceryList(gl); err != nil {
@@ -105,15 +104,15 @@ func (s *Service) UpdateGroceryList(_ context.Context, request *models.UpdateGro
 		panic(err)
 	}
 
-	return &models.UpdateGroceryListResponse{
+	return connect.NewResponse(&models.UpdateGroceryListResponse{
 		GroceryList: gl,
-	}, nil
+	}), nil
 }
 
 // List grocery lists.
 //
 //nolint:unparam // Error is always nil.
-func (s *Service) ListGroceryLists(_ context.Context, _ *models.ListGroceryListsRequest) (*models.ListGroceryListsResponse, error) {
+func (s *Service) ListGroceryLists(_ context.Context, _ *connect.Request[models.ListGroceryListsRequest]) (*connect.Response[models.ListGroceryListsResponse], error) {
 	s.log.Info("ListGroceryLists")
 
 	gls, err := s.store.GroceryLists()
@@ -121,23 +120,23 @@ func (s *Service) ListGroceryLists(_ context.Context, _ *models.ListGroceryLists
 		panic(err)
 	}
 
-	return &models.ListGroceryListsResponse{
+	return connect.NewResponse(&models.ListGroceryListsResponse{
 		GroceryLists: gls,
-	}, nil
+	}), nil
 }
 
 // Delete a grocery list by its ID.
 //
 //nolint:unparam // Result is never used.
-func (s *Service) DeleteGroceryList(_ context.Context, request *models.DeleteGroceryListRequest) (*models.DeleteGroceryListResponse, error) {
+func (s *Service) DeleteGroceryList(_ context.Context, request *connect.Request[models.DeleteGroceryListRequest]) (*connect.Response[models.DeleteGroceryListResponse], error) {
 	s.log.Info("DeleteGroceryList")
 
-	if err := s.store.DeleteGroceryList(request.GetId()); err != nil {
+	if err := s.store.DeleteGroceryList(request.Msg.GetId()); err != nil {
 		if errors.Is(err, ErrNoSuchEntity) {
 			return nil, status.Error(codes.NotFound, "grocery list not found")
 		}
 		panic(err)
 	}
 
-	return &models.DeleteGroceryListResponse{}, nil
+	return connect.NewResponse(&models.DeleteGroceryListResponse{}), nil
 }
