@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
-	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1"
-	"github.com/kiliandbigblue/octoback/internal/core/v1/mocks"
+	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
+	"github.com/kiliandbigblue/octoback/internal/groceries/v1/mocks"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"

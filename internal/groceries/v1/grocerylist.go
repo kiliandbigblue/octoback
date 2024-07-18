@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1"
+	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
 	"github.com/pkg/errors"
 )
 

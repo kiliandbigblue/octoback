@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"connectrpc.com/connect"
-	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1"
+	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"github.com/segmentio/ksuid"
 )

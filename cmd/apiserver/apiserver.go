@@ -6,8 +6,8 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
-	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1/corev1connect"
-	corev1 "github.com/kiliandbigblue/octoback/internal/core/v1"
+	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1/groceriesv1connect"
+	v1 "github.com/kiliandbigblue/octoback/internal/groceries/v1"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -34,12 +34,12 @@ func main() {
 
 	db, _ := os.OpenFile("database.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o666) //nolint:gosec //Permissive permissions.
 
-	fs, err := corev1.NewFileSystemGroceryStore(db)
+	fs, err := v1.NewFileSystemGroceryStore(db)
 	if err != nil {
 		log.Fatal("failed to create file system grocery store", zap.Error(err))
 	}
 
-	cs := corev1.NewService(fs)
+	cs := v1.NewService(fs)
 
 	vi, err := validate.NewInterceptor()
 	if err != nil {
@@ -49,7 +49,7 @@ func main() {
 	li := cloudzap.NewLoggerInterceptor(log)
 
 	mux := http.NewServeMux()
-	path, handler := corev1connect.NewServiceHandler(cs, connect.WithInterceptors(vi, li))
+	path, handler := groceriesv1connect.NewServiceHandler(cs, connect.WithInterceptors(vi, li))
 	mux.Handle(path, handler)
 
 	//nolint:gosec //No timeout.
