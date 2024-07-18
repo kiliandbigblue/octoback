@@ -7,7 +7,9 @@ import (
 	"connectrpc.com/connect"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
 	"github.com/kiliandbigblue/octoback/internal/groceries/v1/mocks"
+	"github.com/kiliandbigblue/octoback/internal/groceries/v1/store"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
+	"github.com/kiliandbigblue/octoback/internal/x/testhelper"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -37,7 +39,7 @@ func (s *serviceTestSuite) SetupTest() {
 
 // Test that we can retrieve a grocery list by its ID.
 func (s *serviceTestSuite) TestGetReceipe_Ok() {
-	gl := FakeGroceryList()
+	gl := testhelper.FakeGroceryList()
 
 	s.store.EXPECT().GroceryList(gl.GetId()).Return(gl, nil)
 
@@ -50,10 +52,10 @@ func (s *serviceTestSuite) TestGetReceipe_Ok() {
 
 // Test that we get a NotFound error when the grocery list does not exist.
 func (s *serviceTestSuite) TestGetReceipe_Err() {
-	s.store.EXPECT().GroceryList(mock.Anything).Return(nil, ErrNoSuchEntity)
+	s.store.EXPECT().GroceryList(mock.Anything).Return(nil, store.ErrNoSuchEntity)
 
 	response, err := s.s.GetGroceryList(s.ctx, connect.NewRequest(&models.GetGroceryListRequest{
-		Id: FakeGroceryListID(),
+		Id: testhelper.FakeGroceryListID(),
 	}))
 	s.Error(err)
 	s.Equal(connect.CodeNotFound, connect.CodeOf(err))
@@ -83,7 +85,7 @@ func (s *serviceTestSuite) TestCreateGroceryList_Ok() {
 
 // Test that we can't create a grocery list with an empty name.
 func (s *serviceTestSuite) TestCreateGroceryList_Err_StoreValidation() {
-	s.store.EXPECT().SetGroceryList(mock.Anything).Return(&StoreValidationError{}).Once()
+	s.store.EXPECT().SetGroceryList(mock.Anything).Return(&store.StoreValidationError{}).Once()
 
 	response, err := s.s.CreateGroceryList(s.ctx, connect.NewRequest(&models.CreateGroceryListRequest{
 		Name: "",
@@ -94,9 +96,9 @@ func (s *serviceTestSuite) TestCreateGroceryList_Err_StoreValidation() {
 
 // Test that we can update a grocery list.
 func (s *serviceTestSuite) TestUpdateGroceryList_Ok() {
-	actual := FakeGroceryList()
+	actual := testhelper.FakeGroceryList()
 
-	input := FakeGroceryList()
+	input := testhelper.FakeGroceryList()
 	input.Id = actual.GetId()
 
 	s.store.EXPECT().GroceryList(actual.GetId()).Return(actual, nil)
@@ -113,7 +115,7 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Ok() {
 // Test that we can't update a grocery list with an invalid mask.
 func (s *serviceTestSuite) TestUpdateGroceryList_Err_InvalidMask() {
 	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
-		GroceryList: FakeGroceryList(),
+		GroceryList: testhelper.FakeGroceryList(),
 		UpdateMask:  &fieldmaskpb.FieldMask{Paths: []string{"id"}},
 	}))
 	s.Error(err)
@@ -124,9 +126,9 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_InvalidMask() {
 
 // Test that we get a NotFound error when the grocery list does not exist.
 func (s *serviceTestSuite) TestUpdateGroceryList_Err_NotFound() {
-	gl := FakeGroceryList()
+	gl := testhelper.FakeGroceryList()
 
-	s.store.EXPECT().GroceryList(gl.GetId()).Return(nil, ErrNoSuchEntity)
+	s.store.EXPECT().GroceryList(gl.GetId()).Return(nil, store.ErrNoSuchEntity)
 
 	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: gl,
@@ -139,9 +141,9 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_NotFound() {
 
 // Test that we can't update a grocery list if the proto validation fails.
 func (s *serviceTestSuite) TestUpdateGroceryList_Err_Validation() {
-	gl := FakeGroceryList()
+	gl := testhelper.FakeGroceryList()
 
-	input := FakeGroceryList()
+	input := testhelper.FakeGroceryList()
 	input.Id = gl.GetId()
 	input.Name = ""
 
@@ -150,7 +152,7 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_Validation() {
 		Id:    gl.GetId(),
 		Name:  "",
 		Items: gl.GetItems(),
-	}).Return(&StoreValidationError{})
+	}).Return(&store.StoreValidationError{})
 
 	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: input,
@@ -163,8 +165,8 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_Validation() {
 
 // Test that we can list all grocery lists.
 func (s *serviceTestSuite) TestListGroceryLists_Ok() {
-	gl1 := FakeGroceryList()
-	gl2 := FakeGroceryList()
+	gl1 := testhelper.FakeGroceryList()
+	gl2 := testhelper.FakeGroceryList()
 
 	s.store.EXPECT().GroceryLists().Return([]*models.GroceryList{gl1, gl2}, nil)
 
@@ -175,7 +177,7 @@ func (s *serviceTestSuite) TestListGroceryLists_Ok() {
 
 // Test that we can delete a grocery list.
 func (s *serviceTestSuite) TestDeleteGroceryList_Ok() {
-	gl := FakeGroceryList()
+	gl := testhelper.FakeGroceryList()
 
 	s.store.EXPECT().DeleteGroceryList(gl.GetId()).Return(nil)
 
@@ -187,10 +189,10 @@ func (s *serviceTestSuite) TestDeleteGroceryList_Ok() {
 
 // Test that we get a NotFound error when the grocery list does not exist.
 func (s *serviceTestSuite) TestDeleteGroceryList_Err_NotFound() {
-	s.store.EXPECT().DeleteGroceryList(mock.Anything).Return(ErrNoSuchEntity)
+	s.store.EXPECT().DeleteGroceryList(mock.Anything).Return(store.ErrNoSuchEntity)
 
 	_, err := s.s.DeleteGroceryList(s.ctx, connect.NewRequest(&models.DeleteGroceryListRequest{
-		Id: FakeGroceryListID(),
+		Id: testhelper.FakeGroceryListID(),
 	}))
 	s.Error(err)
 	s.Equal(connect.CodeNotFound, connect.CodeOf(err))

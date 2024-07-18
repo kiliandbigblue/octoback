@@ -1,7 +1,8 @@
-package v1
+package testhelper
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 
 	"github.com/icrowley/fake"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
@@ -13,7 +14,9 @@ func FakeGroceryListID() string {
 }
 
 func FakeGroceryList() *models.GroceryList {
-	items := make([]*models.GroceryItem, 0, rand.Intn(5)+1)
+	nItems, _ := rand.Int(rand.Reader, big.NewInt(5))
+	items := make([]*models.GroceryItem, 0, nItems.Int64()+1)
+
 	for i := range items {
 		item := FakeGroceryItem()
 		item.Id = int64(i)
@@ -28,8 +31,9 @@ func FakeGroceryList() *models.GroceryList {
 }
 
 func FakeGroceryItem() *models.GroceryItem {
+	qty, _ := rand.Int(rand.Reader, big.NewInt(5))
 	return &models.GroceryItem{
 		Name:     fake.Characters(),
-		Quantity: int32(rand.Intn(5) + 1),
+		Quantity: int32(qty.Int64() + 1),
 	}
 }

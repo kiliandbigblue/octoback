@@ -1,4 +1,4 @@
-package v1
+package store
 
 import (
 	"encoding/json"
@@ -7,8 +7,33 @@ import (
 
 	"github.com/bufbuild/protovalidate-go"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
+	"github.com/kiliandbigblue/octoback/internal/x/xio"
 	"github.com/pkg/errors"
 )
+
+var ErrNoSuchEntity = errors.New("no such entity")
+
+type StoreValidationError struct {
+	Err error
+}
+
+func (e *StoreValidationError) Error() string {
+	if e.Err != nil {
+		return e.Err.Error()
+	}
+	return "store validation error"
+}
+
+type StoreInternalError struct {
+	Err error
+}
+
+func (e *StoreInternalError) Error() string {
+	if e.Err != nil {
+		return e.Err.Error()
+	}
+	return "store internal error"
+}
 
 type FileSystemGroceryStore struct {
 	database *json.Encoder
@@ -29,7 +54,7 @@ func NewFileSystemGroceryStore(file *os.File) (*FileSystemGroceryStore, error) {
 	}
 
 	return &FileSystemGroceryStore{
-		database: json.NewEncoder(&tape{file}),
+		database: json.NewEncoder(&xio.Tape{File: file}),
 		data:     data,
 		v:        v,
 	}, nil

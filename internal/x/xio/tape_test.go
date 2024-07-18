@@ -1,17 +1,19 @@
-package v1
+package xio
 
 import (
 	"io"
 	"testing"
+
+	"github.com/kiliandbigblue/octoback/internal/x/testhelper"
 )
 
 func TestTape_Write(t *testing.T) {
-	file, clean := createTempFile(t, "12345")
+	file, clean := testhelper.CreateTempFile(t, "12345")
 	defer clean()
 
-	tape := &tape{file}
+	Tape := &Tape{file}
 
-	tape.Write([]byte("abc"))
+	Tape.Write([]byte("abc"))
 
 	file.Seek(0, 0)
 	newFileContents, _ := io.ReadAll(file)
