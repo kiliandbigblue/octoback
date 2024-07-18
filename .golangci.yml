@@ -36,6 +36,10 @@ linters-settings:
     disabled-checks:
       - exitAfterDefer
       - unnamedResult # Disagree with this one.
+      - paramTypeCombine # 2022-08-06: doesn't support generics
+      - rangeValCopy # 2022-08-06: doesn't support generics
+      - typeDefFirst # 2022-08-06: doesn't support generics
+      - hugeParam # 2022-08-06: doesn't support generics
 
     # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
     # Empty list by default. See https://github.com/go-critic/go-critic#usage -> section "Tags".
