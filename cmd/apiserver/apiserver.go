@@ -54,7 +54,7 @@ func main() {
 
 	//nolint:gosec //No timeout.
 	err = http.ListenAndServe(
-		"localhost:"+port,
+		"0.0.0.0:"+port,
 		// Use h2c so we can serve HTTP/2 without TLS.
 		h2c.NewHandler(mux, &http2.Server{}),
 	)
