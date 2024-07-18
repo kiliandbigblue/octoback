@@ -3,7 +3,7 @@ package v1
 import (
 	"errors"
 
-	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1"
+	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
 )
 
 var ErrNoSuchEntity = errors.New("no such entity")

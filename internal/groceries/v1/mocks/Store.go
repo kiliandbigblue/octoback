@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	corev1 "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1"
+	groceriesv1 "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -67,23 +67,23 @@ func (_c *Store_DeleteGroceryList_Call) RunAndReturn(run func(string) error) *St
 }
 
 // GroceryList provides a mock function with given fields: id
-func (_m *Store) GroceryList(id string) (*corev1.GroceryList, error) {
+func (_m *Store) GroceryList(id string) (*groceriesv1.GroceryList, error) {
 	ret := _m.Called(id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GroceryList")
 	}
 
-	var r0 *corev1.GroceryList
+	var r0 *groceriesv1.GroceryList
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (*corev1.GroceryList, error)); ok {
+	if rf, ok := ret.Get(0).(func(string) (*groceriesv1.GroceryList, error)); ok {
 		return rf(id)
 	}
-	if rf, ok := ret.Get(0).(func(string) *corev1.GroceryList); ok {
+	if rf, ok := ret.Get(0).(func(string) *groceriesv1.GroceryList); ok {
 		r0 = rf(id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*corev1.GroceryList)
+			r0 = ret.Get(0).(*groceriesv1.GroceryList)
 		}
 	}
 
@@ -114,34 +114,34 @@ func (_c *Store_GroceryList_Call) Run(run func(id string)) *Store_GroceryList_Ca
 	return _c
 }
 
-func (_c *Store_GroceryList_Call) Return(_a0 *corev1.GroceryList, _a1 error) *Store_GroceryList_Call {
+func (_c *Store_GroceryList_Call) Return(_a0 *groceriesv1.GroceryList, _a1 error) *Store_GroceryList_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Store_GroceryList_Call) RunAndReturn(run func(string) (*corev1.GroceryList, error)) *Store_GroceryList_Call {
+func (_c *Store_GroceryList_Call) RunAndReturn(run func(string) (*groceriesv1.GroceryList, error)) *Store_GroceryList_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GroceryLists provides a mock function with given fields:
-func (_m *Store) GroceryLists() ([]*corev1.GroceryList, error) {
+func (_m *Store) GroceryLists() ([]*groceriesv1.GroceryList, error) {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for GroceryLists")
 	}
 
-	var r0 []*corev1.GroceryList
+	var r0 []*groceriesv1.GroceryList
 	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]*corev1.GroceryList, error)); ok {
+	if rf, ok := ret.Get(0).(func() ([]*groceriesv1.GroceryList, error)); ok {
 		return rf()
 	}
-	if rf, ok := ret.Get(0).(func() []*corev1.GroceryList); ok {
+	if rf, ok := ret.Get(0).(func() []*groceriesv1.GroceryList); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*corev1.GroceryList)
+			r0 = ret.Get(0).([]*groceriesv1.GroceryList)
 		}
 	}
 
@@ -171,18 +171,18 @@ func (_c *Store_GroceryLists_Call) Run(run func()) *Store_GroceryLists_Call {
 	return _c
 }
 
-func (_c *Store_GroceryLists_Call) Return(_a0 []*corev1.GroceryList, _a1 error) *Store_GroceryLists_Call {
+func (_c *Store_GroceryLists_Call) Return(_a0 []*groceriesv1.GroceryList, _a1 error) *Store_GroceryLists_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Store_GroceryLists_Call) RunAndReturn(run func() ([]*corev1.GroceryList, error)) *Store_GroceryLists_Call {
+func (_c *Store_GroceryLists_Call) RunAndReturn(run func() ([]*groceriesv1.GroceryList, error)) *Store_GroceryLists_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // SetGroceryList provides a mock function with given fields: gl
-func (_m *Store) SetGroceryList(gl *corev1.GroceryList) error {
+func (_m *Store) SetGroceryList(gl *groceriesv1.GroceryList) error {
 	ret := _m.Called(gl)
 
 	if len(ret) == 0 {
@@ -190,7 +190,7 @@ func (_m *Store) SetGroceryList(gl *corev1.GroceryList) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*corev1.GroceryList) error); ok {
+	if rf, ok := ret.Get(0).(func(*groceriesv1.GroceryList) error); ok {
 		r0 = rf(gl)
 	} else {
 		r0 = ret.Error(0)
@@ -205,14 +205,14 @@ type Store_SetGroceryList_Call struct {
 }
 
 // SetGroceryList is a helper method to define mock.On call
-//   - gl *corev1.GroceryList
+//   - gl *groceriesv1.GroceryList
 func (_e *Store_Expecter) SetGroceryList(gl interface{}) *Store_SetGroceryList_Call {
 	return &Store_SetGroceryList_Call{Call: _e.mock.On("SetGroceryList", gl)}
 }
 
-func (_c *Store_SetGroceryList_Call) Run(run func(gl *corev1.GroceryList)) *Store_SetGroceryList_Call {
+func (_c *Store_SetGroceryList_Call) Run(run func(gl *groceriesv1.GroceryList)) *Store_SetGroceryList_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*corev1.GroceryList))
+		run(args[0].(*groceriesv1.GroceryList))
 	})
 	return _c
 }
@@ -222,7 +222,7 @@ func (_c *Store_SetGroceryList_Call) Return(_a0 error) *Store_SetGroceryList_Cal
 	return _c
 }
 
-func (_c *Store_SetGroceryList_Call) RunAndReturn(run func(*corev1.GroceryList) error) *Store_SetGroceryList_Call {
+func (_c *Store_SetGroceryList_Call) RunAndReturn(run func(*groceriesv1.GroceryList) error) *Store_SetGroceryList_Call {
 	_c.Call.Return(run)
 	return _c
 }
