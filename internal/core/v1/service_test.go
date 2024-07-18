@@ -4,21 +4,23 @@ import (
 	"context"
 	"testing"
 
+	"connectrpc.com/connect"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/core/v1"
 	"github.com/kiliandbigblue/octoback/internal/core/v1/mocks"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
+	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 )
 
 type serviceTestSuite struct {
 	suite.Suite
-	s     *Service
 	log   *zap.Logger
+	ctx   context.Context
+	s     *Service
 	store *mocks.Store
 }
 
@@ -28,8 +30,9 @@ func TestServiceTestSuite(t *testing.T) {
 
 func (s *serviceTestSuite) SetupTest() {
 	s.log = zap.NewNop()
+	s.ctx = cloudzap.WithLogger(context.Background(), s.log)
 	s.store = mocks.NewStore(s.T())
-	s.s = NewService(s.log, s.store)
+	s.s = NewService(s.store)
 }
 
 // Test that we can retrieve a grocery list by its ID.
@@ -38,22 +41,22 @@ func (s *serviceTestSuite) TestGetReceipe_Ok() {
 
 	s.store.EXPECT().GroceryList(gl.GetId()).Return(gl, nil)
 
-	response, err := s.s.GetGroceryList(context.Background(), &models.GetGroceryListRequest{
+	response, err := s.s.GetGroceryList(s.ctx, connect.NewRequest(&models.GetGroceryListRequest{
 		Id: gl.GetId(),
-	})
+	}))
 	s.NoError(err)
-	s.Equal(gl, response.GetGroceryList())
+	s.Equal(gl, response.Msg.GetGroceryList())
 }
 
 // Test that we get a NotFound error when the grocery list does not exist.
 func (s *serviceTestSuite) TestGetReceipe_Err() {
 	s.store.EXPECT().GroceryList(mock.Anything).Return(nil, ErrNoSuchEntity)
 
-	response, err := s.s.GetGroceryList(context.Background(), &models.GetGroceryListRequest{
+	response, err := s.s.GetGroceryList(s.ctx, connect.NewRequest(&models.GetGroceryListRequest{
 		Id: FakeGroceryListID(),
-	})
+	}))
 	s.Error(err)
-	s.Equal(codes.NotFound, status.Code(err))
+	s.Equal(connect.CodeNotFound, connect.CodeOf(err))
 	s.Nil(response)
 }
 
@@ -69,22 +72,22 @@ func (s *serviceTestSuite) TestCreateGroceryList_Ok() {
 		}, gl))
 	})).Return(nil)
 
-	response, err := s.s.CreateGroceryList(context.Background(), &models.CreateGroceryListRequest{
+	response, err := s.s.CreateGroceryList(s.ctx, connect.NewRequest(&models.CreateGroceryListRequest{
 		Name: name,
-	})
+	}))
 	s.NoError(err)
-	s.NotEmpty(response.GetGroceryList().GetId())
-	s.Equal("My first grocery list", response.GetGroceryList().GetName())
-	s.Empty(response.GetGroceryList().GetItems())
+	s.NotEmpty(response.Msg.GetGroceryList().GetId())
+	s.Equal("My first grocery list", response.Msg.GetGroceryList().GetName())
+	s.Empty(response.Msg.GetGroceryList().GetItems())
 }
 
 // Test that we can't create a grocery list with an empty name.
 func (s *serviceTestSuite) TestCreateGroceryList_Err_StoreValidation() {
 	s.store.EXPECT().SetGroceryList(mock.Anything).Return(&StoreValidationError{}).Once()
 
-	response, err := s.s.CreateGroceryList(context.Background(), &models.CreateGroceryListRequest{
+	response, err := s.s.CreateGroceryList(s.ctx, connect.NewRequest(&models.CreateGroceryListRequest{
 		Name: "",
-	})
+	}))
 	s.Error(err)
 	s.Nil(response)
 }
@@ -99,23 +102,23 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Ok() {
 	s.store.EXPECT().GroceryList(actual.GetId()).Return(actual, nil)
 	s.store.EXPECT().SetGroceryList(input).Return(nil)
 
-	response, err := s.s.UpdateGroceryList(context.Background(), &models.UpdateGroceryListRequest{
+	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: input,
 		UpdateMask:  &fieldmaskpb.FieldMask{Paths: []string{"name", "items"}},
-	})
+	}))
 	s.NoError(err)
-	s.EqualExportedValues(*input, *response.GetGroceryList()) //nolint:govet //lock value
+	s.EqualExportedValues(*input, *response.Msg.GetGroceryList()) //nolint:govet //lock value
 }
 
 // Test that we can't update a grocery list with an invalid mask.
 func (s *serviceTestSuite) TestUpdateGroceryList_Err_InvalidMask() {
-	response, err := s.s.UpdateGroceryList(context.Background(), &models.UpdateGroceryListRequest{
+	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: FakeGroceryList(),
 		UpdateMask:  &fieldmaskpb.FieldMask{Paths: []string{"id"}},
-	})
+	}))
 	s.Error(err)
 	s.Nil(response)
-	s.Equal(codes.InvalidArgument, status.Code(err))
+	s.Equal(connect.CodeInvalidArgument, connect.CodeOf(err))
 	s.Contains(err.Error(), "invalid mask")
 }
 
@@ -125,13 +128,13 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_NotFound() {
 
 	s.store.EXPECT().GroceryList(gl.GetId()).Return(nil, ErrNoSuchEntity)
 
-	response, err := s.s.UpdateGroceryList(context.Background(), &models.UpdateGroceryListRequest{
+	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: gl,
 		UpdateMask:  &fieldmaskpb.FieldMask{Paths: []string{"name"}},
-	})
+	}))
 	s.Error(err)
 	s.Nil(response)
-	s.Equal(codes.NotFound, status.Code(err))
+	s.Equal(connect.CodeNotFound, connect.CodeOf(err))
 }
 
 // Test that we can't update a grocery list if the proto validation fails.
@@ -149,13 +152,13 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_Validation() {
 		Items: gl.GetItems(),
 	}).Return(&StoreValidationError{})
 
-	response, err := s.s.UpdateGroceryList(context.Background(), &models.UpdateGroceryListRequest{
+	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: input,
 		UpdateMask:  &fieldmaskpb.FieldMask{Paths: []string{"name"}},
-	})
+	}))
 	s.Error(err)
 	s.Nil(response)
-	s.Equal(codes.InvalidArgument, status.Code(err))
+	s.Equal(connect.CodeInvalidArgument, connect.CodeOf(err))
 }
 
 // Test that we can list all grocery lists.
@@ -165,9 +168,9 @@ func (s *serviceTestSuite) TestListGroceryLists_Ok() {
 
 	s.store.EXPECT().GroceryLists().Return([]*models.GroceryList{gl1, gl2}, nil)
 
-	response, err := s.s.ListGroceryLists(context.Background(), &models.ListGroceryListsRequest{})
+	response, err := s.s.ListGroceryLists(s.ctx, connect.NewRequest(&models.ListGroceryListsRequest{}))
 	s.NoError(err)
-	s.Equal([]*models.GroceryList{gl1, gl2}, response.GetGroceryLists())
+	s.Equal([]*models.GroceryList{gl1, gl2}, response.Msg.GetGroceryLists())
 }
 
 // Test that we can delete a grocery list.
@@ -176,9 +179,9 @@ func (s *serviceTestSuite) TestDeleteGroceryList_Ok() {
 
 	s.store.EXPECT().DeleteGroceryList(gl.GetId()).Return(nil)
 
-	_, err := s.s.DeleteGroceryList(context.Background(), &models.DeleteGroceryListRequest{
+	_, err := s.s.DeleteGroceryList(s.ctx, connect.NewRequest(&models.DeleteGroceryListRequest{
 		Id: gl.GetId(),
-	})
+	}))
 	s.NoError(err)
 }
 
@@ -186,9 +189,9 @@ func (s *serviceTestSuite) TestDeleteGroceryList_Ok() {
 func (s *serviceTestSuite) TestDeleteGroceryList_Err_NotFound() {
 	s.store.EXPECT().DeleteGroceryList(mock.Anything).Return(ErrNoSuchEntity)
 
-	_, err := s.s.DeleteGroceryList(context.Background(), &models.DeleteGroceryListRequest{
+	_, err := s.s.DeleteGroceryList(s.ctx, connect.NewRequest(&models.DeleteGroceryListRequest{
 		Id: FakeGroceryListID(),
-	})
+	}))
 	s.Error(err)
-	s.Equal(codes.NotFound, status.Code(err))
+	s.Equal(connect.CodeNotFound, connect.CodeOf(err))
 }
