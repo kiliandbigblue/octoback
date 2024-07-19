@@ -1,18 +1,18 @@
-package v1
+package store
 
 import (
 	"errors"
-	"os"
 	"testing"
 
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
+	"github.com/kiliandbigblue/octoback/internal/x/testhelper"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 )
 
 func TestFileSystemStore(t *testing.T) {
 	t.Run("works with an empty file", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, "")
+		database, cleanDatabase := testhelper.CreateTempFile(t, "")
 		defer cleanDatabase()
 
 		_, err := NewFileSystemGroceryStore(database)
@@ -20,7 +20,7 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("grocery lists from a reader", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, `[
+		database, cleanDatabase := testhelper.CreateTempFile(t, `[
 			{"Id": "gl_12345671", "Name": "My first grocery list", "Items": [ {"Id": 1, "Name": "Banana", "Quantity": 3}, {"Id": 2, "Name": "Apple", "Quantity": 2} ]},
 			{"Id": "gl_12345672", "Name": "My second grocery list", "Items": [ {"Id": 1, "Name": "Orange", "Quantity": 5}, {"Id": 2, "Name": "Pear", "Quantity": 1} ]}
 		]`)
@@ -71,7 +71,7 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("get grocery list", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, `[
+		database, cleanDatabase := testhelper.CreateTempFile(t, `[
 			{"Id": "gl_12345671", "Name": "My first grocery list", "Items": [ {"Id": 1, "Name": "Banana", "Quantity": 3}, {"Id": 2, "Name": "Apple", "Quantity": 2} ]},
 			{"Id": "gl_12345672", "Name": "My second grocery list", "Items": [ {"Id": 1, "Name": "Orange", "Quantity": 5}, {"Id": 2, "Name": "Pear", "Quantity": 1} ]}
 		]`)
@@ -103,7 +103,7 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("set grocery list", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, `[
+		database, cleanDatabase := testhelper.CreateTempFile(t, `[
 			{"Id": "gl_12345671", "Name": "My first grocery list", "Items": [ {"Id": 1, "Name": "Banana", "Quantity": 3}, {"Id": 2, "Name": "Apple", "Quantity": 2} ]},
 			{"Id": "gl_12345672", "Name": "My second grocery list", "Items": [ {"Id": 1, "Name": "Orange", "Quantity": 5}, {"Id": 2, "Name": "Pear", "Quantity": 1} ]}
 		]`)
@@ -144,7 +144,7 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("set grocery list with invalid data", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, `[
+		database, cleanDatabase := testhelper.CreateTempFile(t, `[
 			{"Id": "gl_12345671", "Name": "My first grocery list", "Items": [ {"Id": 1, "Name": "Banana", "Quantity": 3}, {"Id": 2, "Name": "Apple", "Quantity": 2} ]},
 			{"Id": "gl_12345672", "Name": "My second grocery list", "Items": [ {"Id": 1, "Name": "Orange", "Quantity": 5}, {"Id": 2, "Name": "Pear", "Quantity": 1} ]}
 		]`)
@@ -164,7 +164,7 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("set grocery list with new ID", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, `[
+		database, cleanDatabase := testhelper.CreateTempFile(t, `[
 			{"Id": "gl_12345671", "Name": "My first grocery list", "Items": [ {"Id": 1, "Name": "Banana", "Quantity": 3}, {"Id": 2, "Name": "Apple", "Quantity": 2} ]},
 			{"Id": "gl_12345672", "Name": "My second grocery list", "Items": [ {"Id": 1, "Name": "Orange", "Quantity": 5}, {"Id": 2, "Name": "Pear", "Quantity": 1} ]}
 		]`)
@@ -205,7 +205,7 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("delete grocery list", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, `[
+		database, cleanDatabase := testhelper.CreateTempFile(t, `[
 			{"Id": "gl_12345671", "Name": "My first grocery list", "Items": [ {"Id": 1, "Name": "Banana", "Quantity": 3}, {"Id": 2, "Name": "Apple", "Quantity": 2} ]},
 			{"Id": "gl_12345672", "Name": "My second grocery list", "Items": [ {"Id": 1, "Name": "Orange", "Quantity": 5}, {"Id": 2, "Name": "Pear", "Quantity": 1} ]}
 		]`)
@@ -225,7 +225,7 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("delete grocery list that does not exist", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, `[
+		database, cleanDatabase := testhelper.CreateTempFile(t, `[
 			{"Id": "gl_12345671", "Name": "My first grocery list", "Items": [ {"Id": 1, "Name": "Banana", "Quantity": 3}, {"Id": 2, "Name": "Apple", "Quantity": 2} ]},
 			{"Id": "gl_12345672", "Name": "My second grocery list", "Items": [ {"Id": 1, "Name": "Orange", "Quantity": 5}, {"Id": 2, "Name": "Pear", "Quantity": 1} ]}
 		]`)
@@ -240,15 +240,15 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("grocery lists are storted", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, "")
+		database, cleanDatabase := testhelper.CreateTempFile(t, "")
 		defer cleanDatabase()
 
 		store, _ := NewFileSystemGroceryStore(database)
 
 		gls := []*models.GroceryList{
-			FakeGroceryList(),
-			FakeGroceryList(),
-			FakeGroceryList(),
+			testhelper.FakeGroceryList(),
+			testhelper.FakeGroceryList(),
+			testhelper.FakeGroceryList(),
 		}
 		gls[2].Id = "gl_12345671"
 		gls[1].Id = "gl_12345672"
@@ -264,23 +264,4 @@ func TestFileSystemStore(t *testing.T) {
 
 		assert.Equal(t, []*models.GroceryList{gls[2], gls[1], gls[0]}, got)
 	})
-}
-
-func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
-	t.Helper()
-
-	tmpfile, err := os.CreateTemp("", "db")
-	if err != nil {
-		t.Fatalf("could not create temp file %v", err)
-	}
-
-	_, _ = tmpfile.WriteString(initialData)
-	_, _ = tmpfile.Seek(0, 0)
-
-	removeFile := func() {
-		_ = tmpfile.Close()
-		_ = os.Remove(tmpfile.Name())
-	}
-
-	return tmpfile, removeFile
 }

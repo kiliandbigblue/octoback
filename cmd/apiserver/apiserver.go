@@ -8,6 +8,7 @@ import (
 	"connectrpc.com/validate"
 	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1/groceriesv1connect"
 	v1 "github.com/kiliandbigblue/octoback/internal/groceries/v1"
+	"github.com/kiliandbigblue/octoback/internal/groceries/v1/store"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -34,7 +35,7 @@ func main() {
 
 	db, _ := os.OpenFile("database.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o666) //nolint:gosec //Permissive permissions.
 
-	fs, err := v1.NewFileSystemGroceryStore(db)
+	fs, err := store.NewFileSystemGroceryStore(db)
 	if err != nil {
 		log.Fatal("failed to create file system grocery store", zap.Error(err))
 	}

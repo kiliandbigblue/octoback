@@ -1,34 +1,8 @@
 package v1
 
 import (
-	"errors"
-
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
 )
-
-var ErrNoSuchEntity = errors.New("no such entity")
-
-type StoreValidationError struct {
-	Err error
-}
-
-func (e *StoreValidationError) Error() string {
-	if e.Err != nil {
-		return e.Err.Error()
-	}
-	return "store validation error"
-}
-
-type StoreInternalError struct {
-	Err error
-}
-
-func (e *StoreInternalError) Error() string {
-	if e.Err != nil {
-		return e.Err.Error()
-	}
-	return "store internal error"
-}
 
 //go:generate mockery --name Store
 type Store interface {

@@ -6,17 +6,18 @@ import (
 
 	"connectrpc.com/connect"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
+	"github.com/kiliandbigblue/octoback/internal/groceries/v1/store"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"github.com/segmentio/ksuid"
 )
 
 type Service struct {
-	store Store
+	s Store
 }
 
-func NewService(store Store) *Service {
+func NewService(s Store) *Service {
 	return &Service{
-		store: store,
+		s: s,
 	}
 }
 
@@ -25,9 +26,9 @@ func (s *Service) GetGroceryList(ctx context.Context, request *connect.Request[m
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("GetGroceryList")
 
-	gli, err := s.store.GroceryList(request.Msg.GetId())
+	gli, err := s.s.GroceryList(request.Msg.GetId())
 	if err != nil {
-		if errors.Is(err, ErrNoSuchEntity) {
+		if errors.Is(err, store.ErrNoSuchEntity) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
 		}
 		panic(err)
@@ -47,8 +48,8 @@ func (s *Service) CreateGroceryList(ctx context.Context, request *connect.Reques
 		Name: request.Msg.GetName(),
 	}
 
-	if err := s.store.SetGroceryList(gl); err != nil {
-		var sve *StoreValidationError
+	if err := s.s.SetGroceryList(gl); err != nil {
+		var sve *store.StoreValidationError
 		if errors.As(err, &sve) {
 			return nil, connect.NewError(connect.CodeInvalidArgument, err)
 		}
@@ -76,9 +77,9 @@ func (s *Service) UpdateGroceryList(ctx context.Context, request *connect.Reques
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid mask"))
 	}
 
-	gl, err := s.store.GroceryList(request.Msg.GetGroceryList().GetId())
+	gl, err := s.s.GroceryList(request.Msg.GetGroceryList().GetId())
 	if err != nil {
-		if errors.Is(err, ErrNoSuchEntity) {
+		if errors.Is(err, store.ErrNoSuchEntity) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
 		}
 		panic(err)
@@ -91,8 +92,8 @@ func (s *Service) UpdateGroceryList(ctx context.Context, request *connect.Reques
 		gl.Items = request.Msg.GetGroceryList().GetItems()
 	}
 
-	if err := s.store.SetGroceryList(gl); err != nil {
-		var sve *StoreValidationError
+	if err := s.s.SetGroceryList(gl); err != nil {
+		var sve *store.StoreValidationError
 		if errors.As(err, &sve) {
 			return nil, connect.NewError(connect.CodeInvalidArgument, err)
 		}
@@ -111,7 +112,7 @@ func (s *Service) ListGroceryLists(ctx context.Context, _ *connect.Request[model
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("ListGroceryLists")
 
-	gls, err := s.store.GroceryLists()
+	gls, err := s.s.GroceryLists()
 	if err != nil {
 		panic(err)
 	}
@@ -128,8 +129,8 @@ func (s *Service) DeleteGroceryList(ctx context.Context, request *connect.Reques
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("DeleteGroceryList")
 
-	if err := s.store.DeleteGroceryList(request.Msg.GetId()); err != nil {
-		if errors.Is(err, ErrNoSuchEntity) {
+	if err := s.s.DeleteGroceryList(request.Msg.GetId()); err != nil {
+		if errors.Is(err, store.ErrNoSuchEntity) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
 		}
 		panic(err)
