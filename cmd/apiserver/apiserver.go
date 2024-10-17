@@ -1,14 +1,19 @@
 package main
 
 import (
+	"context"
+	"database/sql"
+	"flag"
 	"net/http"
 	"os"
+	"time"
+
+	_ "github.com/lib/pq"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
 	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1/groceriesv1connect"
 	v1 "github.com/kiliandbigblue/octoback/internal/groceries/v1"
-	"github.com/kiliandbigblue/octoback/internal/groceries/v1/store"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -16,7 +21,26 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
+// The config struct holds configuration for the server.
+type config struct {
+	port string
+	db   struct {
+		dsn          string
+		maxOpenConns int
+		maxIdleConns int
+		maxIdleTime  string
+	}
+}
+
 func main() {
+	var cfg config
+	flag.StringVar(&cfg.port, "port", os.Getenv("PORT"), "port to listen on")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("OCTOMEAL_DB_DSN"), "PostgreSQL DSN")
+	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
+	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
+	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+	flag.Parse()
+
 	log, err := cloudzap.NewLogger(cloudzap.LoggerConfig{
 		Development: false,
 		Level:       zapcore.DebugLevel,
@@ -25,22 +49,14 @@ func main() {
 		panic(err)
 	}
 
-	log.Info("starting server")
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-		log.Info("defaulting to port", zap.String("port", port))
-	}
-
-	db, _ := os.OpenFile("database.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o666) //nolint:gosec //Permissive permissions.
-
-	fs, err := store.NewFileSystemGroceryStore(db)
+	db, err := openDB(cfg)
 	if err != nil {
-		log.Fatal("failed to create file system grocery store", zap.Error(err))
+		log.Fatal("failed to open database", zap.Error(err))
 	}
+	defer db.Close()
+	log.Info("database connection pool established")
 
-	cs := v1.NewService(fs)
+	cs := v1.NewService(nil)
 
 	vi, err := validate.NewInterceptor()
 	if err != nil {
@@ -53,9 +69,11 @@ func main() {
 	path, handler := groceriesv1connect.NewServiceHandler(cs, connect.WithInterceptors(vi, li))
 	mux.Handle(path, handler)
 
+	log.Info("starting server", zap.String("port", cfg.port))
+
 	//nolint:gosec //No timeout.
 	err = http.ListenAndServe(
-		"0.0.0.0:"+port,
+		"0.0.0.0:"+cfg.port,
 		// Use h2c so we can serve HTTP/2 without TLS.
 		h2c.NewHandler(mux, &http2.Server{}),
 	)
@@ -63,4 +81,29 @@ func main() {
 		log.Fatal("server crashed", zap.Error(err))
 	}
 	log.Info("server stopped")
+}
+
+func openDB(cfg config) (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.db.dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+
+	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
+	if err != nil {
+		return nil, err
+	}
+	db.SetConnMaxIdleTime(duration)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
