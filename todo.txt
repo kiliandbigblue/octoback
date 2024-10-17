@@ -7,4 +7,4 @@ x File system storage
 x Fix Seek back to the start of the file and then write the new data—but what if the new data was smaller than what was there before
 x Only read data at startup and write down the file when data changes
 x Deploy using gcloud run
-- Migrate to Firestore
+- Migrate to Postgres
