@@ -8,17 +8,15 @@ option go_package = "github.com/kiliandbigblue/octoback/groceries/v1;groceries";
 
 // GroceryList represents a list of grocery items.
 message GroceryList {
-  string id = 1 [ (buf.validate.field).string.pattern = "^gl_[[:alnum:]]{8}$" ];
-  string name = 2
-      [ (buf.validate.field).string = {min_len : 1, max_len : 100} ];
-  repeated GroceryItem items = 3;
+    string id = 1 [(buf.validate.field).string.pattern = "^gl_[[:alnum:]]{8}$"];
+    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    repeated GroceryItem items = 3;
 }
 
 // GroceryItem represents a single grocery item.
 message GroceryItem {
-  int64 id = 1 [ (buf.validate.field).int64.gt = 0 ];
-  string name = 2
-      [ (buf.validate.field).string = {min_len : 1, max_len : 100} ];
-  int32 quantity = 3;
-  bool checked = 4;
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
+    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    int32 quantity = 3;
+    bool checked = 4;
 }

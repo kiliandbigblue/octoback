@@ -10,61 +10,59 @@ option go_package = "github.com/kiliandbigblue/octoback/groceries/v1;groceries";
 
 // Service is the groceries service.
 service Service {
-  // Get the grocery list.
-  rpc GetGroceryList(GetGroceryListRequest) returns (GetGroceryListResponse);
-  // Create a grocery list
-  rpc CreateGroceryList(CreateGroceryListRequest)
-      returns (CreateGroceryListResponse);
-  // Update a grocery list
-  rpc UpdateGroceryList(UpdateGroceryListRequest)
-      returns (UpdateGroceryListResponse);
-  // List grocery lists
-  rpc ListGroceryLists(ListGroceryListsRequest)
-      returns (ListGroceryListsResponse);
-  // Delete a grocery list
-  rpc DeleteGroceryList(DeleteGroceryListRequest)
-      returns (DeleteGroceryListResponse);
+    // Get the grocery list.
+    rpc GetGroceryList(GetGroceryListRequest) returns (GetGroceryListResponse);
+    // Create a grocery list
+    rpc CreateGroceryList(CreateGroceryListRequest) returns (CreateGroceryListResponse);
+    // Update a grocery list
+    rpc UpdateGroceryList(UpdateGroceryListRequest) returns (UpdateGroceryListResponse);
+    // List grocery lists
+    rpc ListGroceryLists(ListGroceryListsRequest) returns (ListGroceryListsResponse);
+    // Delete a grocery list
+    rpc DeleteGroceryList(DeleteGroceryListRequest) returns (DeleteGroceryListResponse);
 }
 
 message GetGroceryListRequest {
-  // The ID of the grocery list to get.
-  string id = 1;
+    // The ID of the grocery list to get.
+    string id = 1;
 }
 
 message GetGroceryListResponse {
-  // The grocery list.
-  GroceryList grocery_list = 1;
+    // The grocery list.
+    GroceryList grocery_list = 1;
 }
 
 message CreateGroceryListRequest {
-  // The grocery list name.
-  string name = 1 [ (buf.validate.field).string.min_len = 1 ];
+    // The grocery list name.
+    string name = 1 [(buf.validate.field).string.min_len = 1];
 }
 
 message CreateGroceryListResponse {
-  // The grocery list.
-  GroceryList grocery_list = 1;
+    // The grocery list.
+    GroceryList grocery_list = 1;
 }
 
 message UpdateGroceryListRequest {
-  // The grocery list.
-  GroceryList grocery_list = 1;
-  // The update mask.
-  google.protobuf.FieldMask update_mask = 2;
+    // The grocery list.
+    GroceryList grocery_list = 1;
+    // The update mask.
+    google.protobuf.FieldMask update_mask = 2;
 }
 
 message UpdateGroceryListResponse {
-  // The grocery list.
-  GroceryList grocery_list = 1;
+    // The grocery list.
+    GroceryList grocery_list = 1;
 }
 
 message ListGroceryListsRequest {}
 
-message ListGroceryListsResponse { repeated GroceryList grocery_lists = 1; }
+message ListGroceryListsResponse {
+    repeated GroceryList grocery_lists = 1;
+}
 
 message DeleteGroceryListRequest {
-  // The ID of the grocery list to delete.
-  string id = 1;
+    // The ID of the grocery list to delete.
+    string id = 1;
 }
 
 message DeleteGroceryListResponse {}
