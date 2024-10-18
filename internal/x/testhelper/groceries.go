@@ -9,8 +9,8 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-func FakeGroceryListID() string {
-	return "gl_" + ksuid.New().String()[:8]
+func FakeGroceryListID() int64 {
+	return ksuid.New().Time().Unix()
 }
 
 func FakeGroceryList() *models.GroceryList {

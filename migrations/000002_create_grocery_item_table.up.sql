@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS grocery_item (
     grocery_list_id bigint NOT NULL,
     name text NOT NULL,
     quantity integer NOT NULL DEFAULT 1,
+    checked boolean NOT NULL DEFAULT FALSE,
     created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     version integer NOT NULL DEFAULT 1,
     FOREIGN KEY (grocery_list_id) REFERENCES grocery_list (id) ON DELETE CASCADE

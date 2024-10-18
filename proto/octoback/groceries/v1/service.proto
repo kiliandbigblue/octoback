@@ -24,7 +24,7 @@ service Service {
 
 message GetGroceryListRequest {
     // The ID of the grocery list to get.
-    string id = 1;
+    int64 id = 1;
 }
 
 message GetGroceryListResponse {
@@ -62,7 +62,7 @@ message ListGroceryListsResponse {
 
 message DeleteGroceryListRequest {
     // The ID of the grocery list to delete.
-    string id = 1;
+    int64 id = 1;
 }
 
 message DeleteGroceryListResponse {}

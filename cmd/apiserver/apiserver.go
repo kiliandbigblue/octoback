@@ -9,6 +9,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
@@ -53,7 +54,9 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to open database", zap.Error(err))
 	}
-	defer db.Close()
+	defer func() {
+		_ = db.Close()
+	}()
 	log.Info("database connection pool established")
 
 	cs := v1.NewService(nil)
@@ -86,7 +89,7 @@ func main() {
 func openDB(cfg config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.db.dsn)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to open database")
 	}
 
 	db.SetMaxOpenConns(cfg.db.maxOpenConns)
@@ -94,7 +97,7 @@ func openDB(cfg config) (*sql.DB, error) {
 
 	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse max idle time")
 	}
 	db.SetConnMaxIdleTime(duration)
 
@@ -102,7 +105,7 @@ func openDB(cfg config) (*sql.DB, error) {
 	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to ping database")
 	}
 
 	return db, nil
