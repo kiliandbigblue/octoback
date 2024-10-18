@@ -20,6 +20,8 @@ service Service {
     rpc ListGroceryLists(ListGroceryListsRequest) returns (ListGroceryListsResponse);
     // Delete a grocery list
     rpc DeleteGroceryList(DeleteGroceryListRequest) returns (DeleteGroceryListResponse);
+    // Create a grocery item
+    rpc CreateGroceryItem(CreateGroceryItemRequest) returns (CreateGroceryItemResponse);
 }
 
 message GetGroceryListRequest {
@@ -66,3 +68,19 @@ message DeleteGroceryListRequest {
 }
 
 message DeleteGroceryListResponse {}
+
+message CreateGroceryItemRequest {
+    // The ID of the grocery list to add the item to.
+    int64 grocery_list = 1;
+    // The grocery item name.
+    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    // The quantity of the grocery item.
+    int32 quantity = 3 [(buf.validate.field).int32.gt = 0];
+    // Whether the grocery item is checked.
+    bool checked = 4;
+}
+
+message CreateGroceryItemResponse {
+    // The grocery item.
+    GroceryItem item = 1;
+}

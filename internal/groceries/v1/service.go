@@ -137,3 +137,29 @@ func (s *Service) DeleteGroceryList(ctx context.Context, request *connect.Reques
 
 	return connect.NewResponse(&models.DeleteGroceryListResponse{}), nil
 }
+
+// Create a grocery item
+func (s *Service) CreateGroceryItem(ctx context.Context, request *connect.Request[models.CreateGroceryItemRequest]) (*connect.Response[models.CreateGroceryItemResponse], error) {
+	log, _ := cloudzap.GetLogger(ctx)
+	log.Info("CreateGroceryItem")
+
+	gi := &models.GroceryItem{
+		Id:       1, // will be overwritten by the store
+		Name:     request.Msg.GetName(),
+		Quantity: request.Msg.GetQuantity(),
+		Checked:  request.Msg.GetChecked(),
+	}
+
+	gi, err := s.s.CreateGroceryItem(ctx, request.Msg.GetGroceryList(), gi)
+	if err != nil {
+		var sve *store.StoreValidationError
+		if errors.As(err, &sve) {
+			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		}
+		panic(err)
+	}
+
+	return connect.NewResponse(&models.CreateGroceryItemResponse{
+		Item: gi,
+	}), nil
+}

@@ -9,6 +9,37 @@ import (
 	"context"
 )
 
+const createGroceryItem = `-- name: CreateGroceryItem :one
+INSERT INTO grocery_item (grocery_list_id, name, quantity, checked) VALUES ($1, $2, $3, $4) RETURNING id, grocery_list_id, name, quantity, checked, created_at, version
+`
+
+type CreateGroceryItemParams struct {
+	GroceryListID int64
+	Name          string
+	Quantity      int32
+	Checked       bool
+}
+
+func (q *Queries) CreateGroceryItem(ctx context.Context, arg CreateGroceryItemParams) (GroceryItem, error) {
+	row := q.db.QueryRowContext(ctx, createGroceryItem,
+		arg.GroceryListID,
+		arg.Name,
+		arg.Quantity,
+		arg.Checked,
+	)
+	var i GroceryItem
+	err := row.Scan(
+		&i.ID,
+		&i.GroceryListID,
+		&i.Name,
+		&i.Quantity,
+		&i.Checked,
+		&i.CreatedAt,
+		&i.Version,
+	)
+	return i, err
+}
+
 const createGroceryList = `-- name: CreateGroceryList :one
 INSERT INTO grocery_list (name) VALUES ($1) RETURNING id, name, created_at, version
 `
@@ -19,6 +50,25 @@ func (q *Queries) CreateGroceryList(ctx context.Context, name string) (GroceryLi
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.CreatedAt,
+		&i.Version,
+	)
+	return i, err
+}
+
+const deleteGroceryItem = `-- name: DeleteGroceryItem :one
+DELETE FROM grocery_item WHERE id = $1 RETURNING id, grocery_list_id, name, quantity, checked, created_at, version
+`
+
+func (q *Queries) DeleteGroceryItem(ctx context.Context, id int64) (GroceryItem, error) {
+	row := q.db.QueryRowContext(ctx, deleteGroceryItem, id)
+	var i GroceryItem
+	err := row.Scan(
+		&i.ID,
+		&i.GroceryListID,
+		&i.Name,
+		&i.Quantity,
+		&i.Checked,
 		&i.CreatedAt,
 		&i.Version,
 	)
@@ -41,6 +91,25 @@ func (q *Queries) DeleteGroceryList(ctx context.Context, id int64) (GroceryList,
 	return i, err
 }
 
+const getGroceryItem = `-- name: GetGroceryItem :one
+SELECT id, grocery_list_id, name, quantity, checked, created_at, version FROM grocery_item WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetGroceryItem(ctx context.Context, id int64) (GroceryItem, error) {
+	row := q.db.QueryRowContext(ctx, getGroceryItem, id)
+	var i GroceryItem
+	err := row.Scan(
+		&i.ID,
+		&i.GroceryListID,
+		&i.Name,
+		&i.Quantity,
+		&i.Checked,
+		&i.CreatedAt,
+		&i.Version,
+	)
+	return i, err
+}
+
 const getGroceryList = `-- name: GetGroceryList :one
 SELECT id, name, created_at, version FROM grocery_list WHERE id = $1 LIMIT 1
 `
@@ -55,6 +124,41 @@ func (q *Queries) GetGroceryList(ctx context.Context, id int64) (GroceryList, er
 		&i.Version,
 	)
 	return i, err
+}
+
+const listGroceryItemsByGroceryList = `-- name: ListGroceryItemsByGroceryList :many
+SELECT id, grocery_list_id, name, quantity, checked, created_at, version FROM grocery_item WHERE grocery_list_id = $1
+`
+
+func (q *Queries) ListGroceryItemsByGroceryList(ctx context.Context, groceryListID int64) ([]GroceryItem, error) {
+	rows, err := q.db.QueryContext(ctx, listGroceryItemsByGroceryList, groceryListID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GroceryItem
+	for rows.Next() {
+		var i GroceryItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroceryListID,
+			&i.Name,
+			&i.Quantity,
+			&i.Checked,
+			&i.CreatedAt,
+			&i.Version,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listGroceryLists = `-- name: ListGroceryLists :many
@@ -87,6 +191,40 @@ func (q *Queries) ListGroceryLists(ctx context.Context) ([]GroceryList, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateGroceryItem = `-- name: UpdateGroceryItem :one
+UPDATE grocery_item
+SET name = $2, quantity = $3, checked = $4, version = version + 1
+WHERE id = $1
+RETURNING id, grocery_list_id, name, quantity, checked, created_at, version
+`
+
+type UpdateGroceryItemParams struct {
+	ID       int64
+	Name     string
+	Quantity int32
+	Checked  bool
+}
+
+func (q *Queries) UpdateGroceryItem(ctx context.Context, arg UpdateGroceryItemParams) (GroceryItem, error) {
+	row := q.db.QueryRowContext(ctx, updateGroceryItem,
+		arg.ID,
+		arg.Name,
+		arg.Quantity,
+		arg.Checked,
+	)
+	var i GroceryItem
+	err := row.Scan(
+		&i.ID,
+		&i.GroceryListID,
+		&i.Name,
+		&i.Quantity,
+		&i.Checked,
+		&i.CreatedAt,
+		&i.Version,
+	)
+	return i, err
 }
 
 const updateGroceryList = `-- name: UpdateGroceryList :one

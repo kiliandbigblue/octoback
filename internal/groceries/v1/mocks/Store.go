@@ -22,6 +22,66 @@ func (_m *Store) EXPECT() *Store_Expecter {
 	return &Store_Expecter{mock: &_m.Mock}
 }
 
+// CreateGroceryItem provides a mock function with given fields: ctx, groceryList, r
+func (_m *Store) CreateGroceryItem(ctx context.Context, groceryList int64, r *groceriesv1.GroceryItem) (*groceriesv1.GroceryItem, error) {
+	ret := _m.Called(ctx, groceryList, r)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateGroceryItem")
+	}
+
+	var r0 *groceriesv1.GroceryItem
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64, *groceriesv1.GroceryItem) (*groceriesv1.GroceryItem, error)); ok {
+		return rf(ctx, groceryList, r)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64, *groceriesv1.GroceryItem) *groceriesv1.GroceryItem); ok {
+		r0 = rf(ctx, groceryList, r)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*groceriesv1.GroceryItem)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64, *groceriesv1.GroceryItem) error); ok {
+		r1 = rf(ctx, groceryList, r)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Store_CreateGroceryItem_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateGroceryItem'
+type Store_CreateGroceryItem_Call struct {
+	*mock.Call
+}
+
+// CreateGroceryItem is a helper method to define mock.On call
+//   - ctx context.Context
+//   - groceryList int64
+//   - r *groceriesv1.GroceryItem
+func (_e *Store_Expecter) CreateGroceryItem(ctx interface{}, groceryList interface{}, r interface{}) *Store_CreateGroceryItem_Call {
+	return &Store_CreateGroceryItem_Call{Call: _e.mock.On("CreateGroceryItem", ctx, groceryList, r)}
+}
+
+func (_c *Store_CreateGroceryItem_Call) Run(run func(ctx context.Context, groceryList int64, r *groceriesv1.GroceryItem)) *Store_CreateGroceryItem_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64), args[2].(*groceriesv1.GroceryItem))
+	})
+	return _c
+}
+
+func (_c *Store_CreateGroceryItem_Call) Return(_a0 *groceriesv1.GroceryItem, _a1 error) *Store_CreateGroceryItem_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Store_CreateGroceryItem_Call) RunAndReturn(run func(context.Context, int64, *groceriesv1.GroceryItem) (*groceriesv1.GroceryItem, error)) *Store_CreateGroceryItem_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateGroceryList provides a mock function with given fields: ctx, r
 func (_m *Store) CreateGroceryList(ctx context.Context, r *groceriesv1.GroceryList) (*groceriesv1.GroceryList, error) {
 	ret := _m.Called(ctx, r)
