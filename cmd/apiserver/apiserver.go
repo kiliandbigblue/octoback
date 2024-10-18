@@ -15,6 +15,7 @@ import (
 	"connectrpc.com/validate"
 	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1/groceriesv1connect"
 	v1 "github.com/kiliandbigblue/octoback/internal/groceries/v1"
+	"github.com/kiliandbigblue/octoback/internal/groceries/v1/store"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -59,7 +60,7 @@ func main() {
 	}()
 	log.Info("database connection pool established")
 
-	cs := v1.NewService(nil)
+	cs := v1.NewService(store.NewGroceryStore(db))
 
 	vi, err := validate.NewInterceptor()
 	if err != nil {
