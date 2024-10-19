@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
+	"github.com/icrowley/fake"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
 	"github.com/kiliandbigblue/octoback/internal/groceries/v1/mocks"
 	"github.com/kiliandbigblue/octoback/internal/groceries/v1/store"
@@ -80,7 +81,6 @@ func (s *serviceTestSuite) TestCreateGroceryList_Ok() {
 	s.NoError(err)
 	s.NotEmpty(response.Msg.GetGroceryList().GetId())
 	s.Equal("My first grocery list", response.Msg.GetGroceryList().GetName())
-	s.Empty(response.Msg.GetGroceryList().GetItems())
 }
 
 // Test that we can't create a grocery list with an empty name.
@@ -98,15 +98,15 @@ func (s *serviceTestSuite) TestCreateGroceryList_Err_StoreValidation() {
 func (s *serviceTestSuite) TestUpdateGroceryList_Ok() {
 	actual := testhelper.FakeGroceryList()
 
-	input := testhelper.FakeGroceryList()
-	input.Id = actual.GetId()
+	input, _ := proto.Clone(actual).(*models.GroceryList)
+	input.Name = fake.Characters()
 
 	s.store.EXPECT().GroceryList(s.ctx, actual.GetId()).Return(actual, nil)
 	s.store.EXPECT().UpdateGroceryList(s.ctx, input).Return(input, nil)
 
 	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: input,
-		UpdateMask:  &fieldmaskpb.FieldMask{Paths: []string{"name", "items"}},
+		UpdateMask:  &fieldmaskpb.FieldMask{Paths: []string{"name"}},
 	}))
 	s.NoError(err)
 	s.EqualExportedValues(*input, *response.Msg.GetGroceryList()) //nolint:govet //lock value
@@ -143,16 +143,11 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_NotFound() {
 func (s *serviceTestSuite) TestUpdateGroceryList_Err_Validation() {
 	gl := testhelper.FakeGroceryList()
 
-	input := testhelper.FakeGroceryList()
-	input.Id = gl.GetId()
+	input, _ := proto.Clone(gl).(*models.GroceryList)
 	input.Name = ""
 
 	s.store.EXPECT().GroceryList(s.ctx, gl.GetId()).Return(gl, nil)
-	s.store.EXPECT().UpdateGroceryList(s.ctx, &models.GroceryList{
-		Id:    gl.GetId(),
-		Name:  "",
-		Items: gl.GetItems(),
-	}).Return(nil, &store.StoreValidationError{})
+	s.store.EXPECT().UpdateGroceryList(s.ctx, input).Return(nil, &store.StoreValidationError{})
 
 	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: input,

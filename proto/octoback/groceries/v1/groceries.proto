@@ -11,9 +11,8 @@ option go_package = "github.com/kiliandbigblue/octoback/groceries/v1;groceries";
 message GroceryList {
     int64 id = 1 [(buf.validate.field).int64.gt = 0];
     string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
-    repeated GroceryItem items = 3;
-    google.protobuf.Timestamp create_time = 4;
-    int32 version = 5;
+    google.protobuf.Timestamp create_time = 3;
+    int32 version = 4;
 }
 
 // GroceryItem represents a single grocery item.

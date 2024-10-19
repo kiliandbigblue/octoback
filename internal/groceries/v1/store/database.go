@@ -58,11 +58,7 @@ func (gs *GroceryStore) GroceryLists(ctx context.Context) ([]*models.GroceryList
 
 	mlis := make([]*models.GroceryList, len(slis))
 	for i, sli := range slis {
-		sitms, err := gs.db.ListGroceryItemsByGroceryList(ctx, sli.ID)
-		if err != nil {
-			return nil, &StoreInternalError{Err: err}
-		}
-		mlis[i] = gs.translate(sli, sitms)
+		mlis[i] = gs.translateGroceryList(sli )
 	}
 
 	return mlis, nil
@@ -78,12 +74,7 @@ func (gs *GroceryStore) GroceryList(ctx context.Context, id int64) (*models.Groc
 		return nil, &StoreInternalError{Err: err}
 	}
 
-	sitms, err := gs.db.ListGroceryItemsByGroceryList(ctx, sli.ID)
-	if err != nil {
-		return nil, &StoreInternalError{Err: err}
-	}
-
-	return gs.translate(sli, sitms), nil
+	return gs.translateGroceryList(sli, ), nil
 }
 
 func (gs *GroceryStore) CreateGroceryList(ctx context.Context, r *models.GroceryList) (*models.GroceryList, error) {
@@ -96,7 +87,7 @@ func (gs *GroceryStore) CreateGroceryList(ctx context.Context, r *models.Grocery
 		return nil, &StoreInternalError{Err: err}
 	}
 
-	return gs.translate(sli, nil), nil
+	return gs.translateGroceryList(sli, ), nil
 }
 
 func (gs *GroceryStore) UpdateGroceryList(ctx context.Context, r *models.GroceryList) (*models.GroceryList, error) {
@@ -114,12 +105,7 @@ func (gs *GroceryStore) UpdateGroceryList(ctx context.Context, r *models.Grocery
 		}
 	}
 
-	sitms, err := gs.db.ListGroceryItemsByGroceryList(ctx, sli.ID)
-	if err != nil {
-		return nil, &StoreInternalError{Err: err}
-	}
-
-	return gs.translate(sli, sitms), nil
+	return gs.translateGroceryList(sli, ), nil
 }
 
 func (gs *GroceryStore) DeleteGroceryList(ctx context.Context, id int64) error {
@@ -151,16 +137,10 @@ func (gs *GroceryStore) CreateGroceryItem(ctx context.Context, groceryList int64
 	return gs.translateGroceryItem(sit), nil
 }
 
-func (gs *GroceryStore) translate(sgli database.GroceryList, sglitms []database.GroceryItem) *models.GroceryList {
-	mglitms := make([]*models.GroceryItem, len(sglitms))
-	for i, sglitm := range sglitms {
-		mglitms[i] = gs.translateGroceryItem(sglitm)
-	}
-
+func (gs *GroceryStore) translateGroceryList(sgli database.GroceryList) *models.GroceryList {
 	return &models.GroceryList{
 		Id:         sgli.ID,
 		Name:       sgli.Name,
-		Items:      mglitms,
 		CreateTime: timestamppb.New(sgli.CreatedAt),
 	}
 }

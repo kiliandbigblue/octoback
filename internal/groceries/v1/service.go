@@ -68,7 +68,7 @@ func (s *Service) UpdateGroceryList(ctx context.Context, request *connect.Reques
 	fields := map[string]struct{}{}
 	for _, field := range request.Msg.GetUpdateMask().GetPaths() {
 		switch field {
-		case "name", "items":
+		case "name":
 			fields[field] = struct{}{}
 		}
 	}
@@ -86,9 +86,6 @@ func (s *Service) UpdateGroceryList(ctx context.Context, request *connect.Reques
 
 	if _, ok := fields["name"]; ok {
 		gl.Name = request.Msg.GetGroceryList().GetName()
-	}
-	if _, ok := fields["items"]; ok {
-		gl.Items = request.Msg.GetGroceryList().GetItems()
 	}
 
 	if _, err := s.s.UpdateGroceryList(ctx, gl); err != nil {
