@@ -18,9 +18,10 @@ message GroceryList {
 // GroceryItem represents a single grocery item.
 message GroceryItem {
     int64 id = 1 [(buf.validate.field).int64.gt = 0];
-    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
-    int32 quantity = 3 [(buf.validate.field).int32.gt = 0];
-    bool checked = 4;
-    google.protobuf.Timestamp create_time = 5;
-    int32 version = 6;
+    int64 grocery_list = 2 [(buf.validate.field).int64.gt = 0];
+    string name = 3 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    int32 quantity = 4 [(buf.validate.field).int32.gt = 0];
+    bool checked = 5;
+    google.protobuf.Timestamp create_time = 6;
+    int32 version = 7;
 }

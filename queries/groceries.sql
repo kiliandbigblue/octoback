@@ -7,7 +7,7 @@ INSERT INTO grocery_list (name) VALUES ($1) RETURNING *;
 -- name: UpdateGroceryList :one
 UPDATE grocery_list 
 SET name = $2, version = version + 1
-WHERE id = $1
+WHERE id = $1 AND version = $3
 RETURNING *;
 
 -- name: DeleteGroceryList :one
@@ -25,7 +25,7 @@ INSERT INTO grocery_item (grocery_list_id, name, quantity, checked) VALUES ($1, 
 -- name: UpdateGroceryItem :one
 UPDATE grocery_item
 SET name = $2, quantity = $3, checked = $4, version = version + 1
-WHERE id = $1
+WHERE id = $1 AND version = $5
 RETURNING *;
 
 -- name: DeleteGroceryItem :one

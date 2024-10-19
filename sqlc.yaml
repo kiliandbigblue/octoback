@@ -5,5 +5,6 @@ sql:
     queries: "./queries"
     gen:
       go:
-        package: "database"
-        out: "internal/database"
+        package: "v1"
+        out: "internal/store/v1"
+        emit_interface: true

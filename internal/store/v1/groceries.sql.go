@@ -3,7 +3,7 @@
 //   sqlc v1.27.0
 // source: groceries.sql
 
-package database
+package v1
 
 import (
 	"context"
@@ -196,7 +196,7 @@ func (q *Queries) ListGroceryLists(ctx context.Context) ([]GroceryList, error) {
 const updateGroceryItem = `-- name: UpdateGroceryItem :one
 UPDATE grocery_item
 SET name = $2, quantity = $3, checked = $4, version = version + 1
-WHERE id = $1
+WHERE id = $1 AND version = $5
 RETURNING id, grocery_list_id, name, quantity, checked, created_at, version
 `
 
@@ -205,6 +205,7 @@ type UpdateGroceryItemParams struct {
 	Name     string
 	Quantity int32
 	Checked  bool
+	Version  int32
 }
 
 func (q *Queries) UpdateGroceryItem(ctx context.Context, arg UpdateGroceryItemParams) (GroceryItem, error) {
@@ -213,6 +214,7 @@ func (q *Queries) UpdateGroceryItem(ctx context.Context, arg UpdateGroceryItemPa
 		arg.Name,
 		arg.Quantity,
 		arg.Checked,
+		arg.Version,
 	)
 	var i GroceryItem
 	err := row.Scan(
@@ -230,17 +232,18 @@ func (q *Queries) UpdateGroceryItem(ctx context.Context, arg UpdateGroceryItemPa
 const updateGroceryList = `-- name: UpdateGroceryList :one
 UPDATE grocery_list 
 SET name = $2, version = version + 1
-WHERE id = $1
+WHERE id = $1 AND version = $3
 RETURNING id, name, created_at, version
 `
 
 type UpdateGroceryListParams struct {
-	ID   int64
-	Name string
+	ID      int64
+	Name    string
+	Version int32
 }
 
 func (q *Queries) UpdateGroceryList(ctx context.Context, arg UpdateGroceryListParams) (GroceryList, error) {
-	row := q.db.QueryRowContext(ctx, updateGroceryList, arg.ID, arg.Name)
+	row := q.db.QueryRowContext(ctx, updateGroceryList, arg.ID, arg.Name, arg.Version)
 	var i GroceryList
 	err := row.Scan(
 		&i.ID,
