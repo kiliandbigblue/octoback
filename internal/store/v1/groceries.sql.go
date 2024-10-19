@@ -10,7 +10,9 @@ import (
 )
 
 const createGroceryItem = `-- name: CreateGroceryItem :one
-INSERT INTO grocery_item (grocery_list_id, name, quantity, checked) VALUES ($1, $2, $3, $4) RETURNING id, grocery_list_id, name, quantity, checked, created_at, version
+insert into GROCERY_ITEM (GROCERY_LIST_ID, NAME, QUANTITY, CHECKED)
+values ($1, $2, $3, $4)
+returning id, grocery_list_id, name, quantity, checked, created_at, version
 `
 
 type CreateGroceryItemParams struct {
@@ -41,7 +43,9 @@ func (q *Queries) CreateGroceryItem(ctx context.Context, arg CreateGroceryItemPa
 }
 
 const createGroceryList = `-- name: CreateGroceryList :one
-INSERT INTO grocery_list (name) VALUES ($1) RETURNING id, name, created_at, version
+insert into GROCERY_LIST (NAME)
+values ($1)
+returning id, name, created_at, version
 `
 
 func (q *Queries) CreateGroceryList(ctx context.Context, name string) (GroceryList, error) {
@@ -57,7 +61,10 @@ func (q *Queries) CreateGroceryList(ctx context.Context, name string) (GroceryLi
 }
 
 const deleteGroceryItem = `-- name: DeleteGroceryItem :one
-DELETE FROM grocery_item WHERE id = $1 RETURNING id, grocery_list_id, name, quantity, checked, created_at, version
+delete
+from GROCERY_ITEM
+where ID = $1
+returning id, grocery_list_id, name, quantity, checked, created_at, version
 `
 
 func (q *Queries) DeleteGroceryItem(ctx context.Context, id int64) (GroceryItem, error) {
@@ -76,7 +83,10 @@ func (q *Queries) DeleteGroceryItem(ctx context.Context, id int64) (GroceryItem,
 }
 
 const deleteGroceryList = `-- name: DeleteGroceryList :one
-DELETE FROM grocery_list WHERE id = $1 RETURNING id, name, created_at, version
+delete
+from GROCERY_LIST
+where ID = $1
+returning id, name, created_at, version
 `
 
 func (q *Queries) DeleteGroceryList(ctx context.Context, id int64) (GroceryList, error) {
@@ -92,7 +102,10 @@ func (q *Queries) DeleteGroceryList(ctx context.Context, id int64) (GroceryList,
 }
 
 const getGroceryItem = `-- name: GetGroceryItem :one
-SELECT id, grocery_list_id, name, quantity, checked, created_at, version FROM grocery_item WHERE id = $1 LIMIT 1
+select id, grocery_list_id, name, quantity, checked, created_at, version
+from GROCERY_ITEM
+where ID = $1
+limit 1
 `
 
 func (q *Queries) GetGroceryItem(ctx context.Context, id int64) (GroceryItem, error) {
@@ -111,7 +124,10 @@ func (q *Queries) GetGroceryItem(ctx context.Context, id int64) (GroceryItem, er
 }
 
 const getGroceryList = `-- name: GetGroceryList :one
-SELECT id, name, created_at, version FROM grocery_list WHERE id = $1 LIMIT 1
+select id, name, created_at, version
+from GROCERY_LIST
+where ID = $1
+limit 1
 `
 
 func (q *Queries) GetGroceryList(ctx context.Context, id int64) (GroceryList, error) {
@@ -127,7 +143,9 @@ func (q *Queries) GetGroceryList(ctx context.Context, id int64) (GroceryList, er
 }
 
 const listGroceryItemsByGroceryList = `-- name: ListGroceryItemsByGroceryList :many
-SELECT id, grocery_list_id, name, quantity, checked, created_at, version FROM grocery_item WHERE grocery_list_id = $1
+select id, grocery_list_id, name, quantity, checked, created_at, version
+from GROCERY_ITEM
+where GROCERY_LIST_ID = $1
 `
 
 func (q *Queries) ListGroceryItemsByGroceryList(ctx context.Context, groceryListID int64) ([]GroceryItem, error) {
@@ -162,7 +180,8 @@ func (q *Queries) ListGroceryItemsByGroceryList(ctx context.Context, groceryList
 }
 
 const listGroceryLists = `-- name: ListGroceryLists :many
-SELECT id, name, created_at, version FROM grocery_list
+select id, name, created_at, version
+from GROCERY_LIST
 `
 
 func (q *Queries) ListGroceryLists(ctx context.Context) ([]GroceryList, error) {
@@ -194,10 +213,10 @@ func (q *Queries) ListGroceryLists(ctx context.Context) ([]GroceryList, error) {
 }
 
 const updateGroceryItem = `-- name: UpdateGroceryItem :one
-UPDATE grocery_item
-SET name = $2, quantity = $3, checked = $4, version = version + 1
-WHERE id = $1 AND version = $5
-RETURNING id, grocery_list_id, name, quantity, checked, created_at, version
+update GROCERY_ITEM
+set NAME = $2, QUANTITY = $3, CHECKED = $4, VERSION = VERSION + 1
+where ID = $1 and VERSION = $5
+returning id, grocery_list_id, name, quantity, checked, created_at, version
 `
 
 type UpdateGroceryItemParams struct {
@@ -230,10 +249,10 @@ func (q *Queries) UpdateGroceryItem(ctx context.Context, arg UpdateGroceryItemPa
 }
 
 const updateGroceryList = `-- name: UpdateGroceryList :one
-UPDATE grocery_list 
-SET name = $2, version = version + 1
-WHERE id = $1 AND version = $3
-RETURNING id, name, created_at, version
+update GROCERY_LIST 
+set NAME = $2, VERSION = VERSION + 1
+where ID = $1 and VERSION = $3
+returning id, name, created_at, version
 `
 
 type UpdateGroceryListParams struct {

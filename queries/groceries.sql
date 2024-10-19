@@ -1,37 +1,56 @@
 -- name: GetGroceryList :one
-SELECT * FROM grocery_list WHERE id = $1 LIMIT 1;
+select *
+from GROCERY_LIST
+where ID = $1
+limit 1;
 
 -- name: CreateGroceryList :one
-INSERT INTO grocery_list (name) VALUES ($1) RETURNING *;
+insert into GROCERY_LIST (NAME)
+values ($1)
+returning *;
 
 -- name: UpdateGroceryList :one
-UPDATE grocery_list 
-SET name = $2, version = version + 1
-WHERE id = $1 AND version = $3
-RETURNING *;
+update GROCERY_LIST 
+set NAME = $2, VERSION = VERSION + 1
+where ID = $1 and VERSION = $3
+returning *;
 
 -- name: DeleteGroceryList :one
-DELETE FROM grocery_list WHERE id = $1 RETURNING *;
+delete
+from GROCERY_LIST
+where ID = $1
+returning *;
 
 -- name: ListGroceryLists :many
-SELECT * FROM grocery_list;
+select *
+from GROCERY_LIST;
 
 -- name: GetGroceryItem :one
-SELECT * FROM grocery_item WHERE id = $1 LIMIT 1;
+select *
+from GROCERY_ITEM
+where ID = $1
+limit 1;
 
 -- name: CreateGroceryItem :one
-INSERT INTO grocery_item (grocery_list_id, name, quantity, checked) VALUES ($1, $2, $3, $4) RETURNING *;
+insert into GROCERY_ITEM (GROCERY_LIST_ID, NAME, QUANTITY, CHECKED)
+values ($1, $2, $3, $4)
+returning *;
 
 -- name: UpdateGroceryItem :one
-UPDATE grocery_item
-SET name = $2, quantity = $3, checked = $4, version = version + 1
-WHERE id = $1 AND version = $5
-RETURNING *;
+update GROCERY_ITEM
+set NAME = $2, QUANTITY = $3, CHECKED = $4, VERSION = VERSION + 1
+where ID = $1 and VERSION = $5
+returning *;
 
 -- name: DeleteGroceryItem :one
-DELETE FROM grocery_item WHERE id = $1 RETURNING *;
+delete
+from GROCERY_ITEM
+where ID = $1
+returning *;
 
 -- name: ListGroceryItemsByGroceryList :many
-SELECT * FROM grocery_item WHERE grocery_list_id = $1;
+select *
+from GROCERY_ITEM
+where GROCERY_LIST_ID = $1;
 
 
