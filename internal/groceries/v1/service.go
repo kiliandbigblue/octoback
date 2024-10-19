@@ -63,8 +63,7 @@ func (s *Service) UpdateGroceryList(ctx context.Context, r *connect.Request[mode
 
 	fields := map[string]struct{}{}
 	for _, field := range r.Msg.GetUpdateMask().GetPaths() {
-		switch field {
-		case "name":
+		if field == "name" {
 			fields[field] = struct{}{}
 		}
 	}
@@ -156,7 +155,7 @@ func (s *Service) GetGroceryItem(ctx context.Context, r *connect.Request[models.
 	}), nil
 }
 
-// Create a grocery item
+// Create a grocery item.
 func (s *Service) CreateGroceryItem(ctx context.Context, r *connect.Request[models.CreateGroceryItemRequest]) (*connect.Response[models.CreateGroceryItemResponse], error) {
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("CreateGroceryItem")
@@ -179,7 +178,7 @@ func (s *Service) CreateGroceryItem(ctx context.Context, r *connect.Request[mode
 	}), nil
 }
 
-// Update a grocery item
+// Update a grocery item.
 func (s *Service) UpdateGroceryItem(ctx context.Context, r *connect.Request[models.UpdateGroceryItemRequest]) (*connect.Response[models.UpdateGroceryItemResponse], error) {
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("UpdateGroceryItem")
@@ -253,7 +252,9 @@ func (s *Service) ListGroceryItems(ctx context.Context, r *connect.Request[model
 	}), nil
 }
 
-// Delete a grocery item
+// Delete a grocery item.
+//
+//nolint:unparam // Result is never used.
 func (s *Service) DeleteGroceryItem(ctx context.Context, r *connect.Request[models.DeleteGroceryItemRequest]) (*connect.Response[models.DeleteGroceryItemResponse], error) {
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("DeleteGroceryItem")

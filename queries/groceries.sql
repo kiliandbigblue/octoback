@@ -10,7 +10,7 @@ values ($1)
 returning *;
 
 -- name: UpdateGroceryList :one
-update GROCERY_LIST 
+update GROCERY_LIST
 set NAME = $2, VERSION = VERSION + 1
 where ID = $1 and VERSION = $3
 returning *;
