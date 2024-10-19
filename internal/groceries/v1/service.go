@@ -260,7 +260,7 @@ func (s *Service) DeleteGroceryItem(ctx context.Context, r *connect.Request[mode
 
 	if _, err := s.querier.DeleteGroceryItem(ctx, r.Msg.GetId()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery item not found"))
 		}
 		panic(err)
 	}

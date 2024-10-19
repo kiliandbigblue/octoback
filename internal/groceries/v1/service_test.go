@@ -256,10 +256,10 @@ func (s *serviceTestSuite) TestUpdateGroceryItem_Ok() {
 	gil := testhelper.FakeGroceryListID()
 
 	actual := testhelper.FakeStoreGroceryItem(gil)
-    input := actual
-    input.Name = actual.Name + " updated"
-    input.Quantity = actual.Quantity + 1
-    input.Checked = !actual.Checked
+	input := actual
+	input.Name = actual.Name + " updated"
+	input.Quantity = actual.Quantity + 1
+	input.Checked = !actual.Checked
 
 	s.querier.EXPECT().GetGroceryItem(s.ctx, actual.ID).Return(actual, nil)
 
