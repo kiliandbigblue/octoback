@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	store "github.com/kiliandbigblue/octoback/internal/store/v1"
+	store "github.com/kiliandbigblue/octoback/gen/store/v1"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
