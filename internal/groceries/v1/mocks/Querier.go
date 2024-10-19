@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	v1 "github.com/kiliandbigblue/octoback/internal/store/v1"
+	v1 "github.com/kiliandbigblue/octoback/gen/store/v1"
 	mock "github.com/stretchr/testify/mock"
 )
 

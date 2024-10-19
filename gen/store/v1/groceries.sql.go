@@ -249,7 +249,7 @@ func (q *Queries) UpdateGroceryItem(ctx context.Context, arg UpdateGroceryItemPa
 }
 
 const updateGroceryList = `-- name: UpdateGroceryList :one
-update GROCERY_LIST 
+update GROCERY_LIST
 set NAME = $2, VERSION = VERSION + 1
 where ID = $1 and VERSION = $3
 returning id, name, created_at, version

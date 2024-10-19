@@ -7,7 +7,7 @@ import (
 
 	"github.com/icrowley/fake"
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
-	store "github.com/kiliandbigblue/octoback/internal/store/v1"
+	store "github.com/kiliandbigblue/octoback/gen/store/v1"
 	"github.com/segmentio/ksuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

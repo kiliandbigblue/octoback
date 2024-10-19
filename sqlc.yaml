@@ -6,5 +6,5 @@ sql:
     gen:
       go:
         package: "v1"
-        out: "internal/store/v1"
+        out: "gen/store/v1"
         emit_interface: true
