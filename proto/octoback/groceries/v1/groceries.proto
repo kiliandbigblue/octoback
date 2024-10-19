@@ -3,20 +3,25 @@ syntax = "proto3";
 package octoback.groceries.v1;
 
 import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/kiliandbigblue/octoback/groceries/v1;groceries";
 
 // GroceryList represents a list of grocery items.
 message GroceryList {
-    string id = 1 [(buf.validate.field).string.pattern = "^gl_[[:alnum:]]{8}$"];
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
     string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
-    repeated GroceryItem items = 3;
+    google.protobuf.Timestamp create_time = 3;
+    int32 version = 4;
 }
 
 // GroceryItem represents a single grocery item.
 message GroceryItem {
     int64 id = 1 [(buf.validate.field).int64.gt = 0];
-    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
-    int32 quantity = 3;
-    bool checked = 4;
+    int64 grocery_list = 2 [(buf.validate.field).int64.gt = 0];
+    string name = 3 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    int32 quantity = 4 [(buf.validate.field).int32.gt = 0];
+    bool checked = 5;
+    google.protobuf.Timestamp create_time = 6;
+    int32 version = 7;
 }

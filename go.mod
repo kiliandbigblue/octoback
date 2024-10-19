@@ -23,6 +23,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/cel-go v0.18.2 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect

@@ -47,6 +47,20 @@ const (
 	// ServiceDeleteGroceryListProcedure is the fully-qualified name of the Service's DeleteGroceryList
 	// RPC.
 	ServiceDeleteGroceryListProcedure = "/octoback.groceries.v1.Service/DeleteGroceryList"
+	// ServiceGetGroceryItemProcedure is the fully-qualified name of the Service's GetGroceryItem RPC.
+	ServiceGetGroceryItemProcedure = "/octoback.groceries.v1.Service/GetGroceryItem"
+	// ServiceCreateGroceryItemProcedure is the fully-qualified name of the Service's CreateGroceryItem
+	// RPC.
+	ServiceCreateGroceryItemProcedure = "/octoback.groceries.v1.Service/CreateGroceryItem"
+	// ServiceUpdateGroceryItemProcedure is the fully-qualified name of the Service's UpdateGroceryItem
+	// RPC.
+	ServiceUpdateGroceryItemProcedure = "/octoback.groceries.v1.Service/UpdateGroceryItem"
+	// ServiceListGroceryItemsProcedure is the fully-qualified name of the Service's ListGroceryItems
+	// RPC.
+	ServiceListGroceryItemsProcedure = "/octoback.groceries.v1.Service/ListGroceryItems"
+	// ServiceDeleteGroceryItemProcedure is the fully-qualified name of the Service's DeleteGroceryItem
+	// RPC.
+	ServiceDeleteGroceryItemProcedure = "/octoback.groceries.v1.Service/DeleteGroceryItem"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -57,6 +71,11 @@ var (
 	serviceUpdateGroceryListMethodDescriptor = serviceServiceDescriptor.Methods().ByName("UpdateGroceryList")
 	serviceListGroceryListsMethodDescriptor  = serviceServiceDescriptor.Methods().ByName("ListGroceryLists")
 	serviceDeleteGroceryListMethodDescriptor = serviceServiceDescriptor.Methods().ByName("DeleteGroceryList")
+	serviceGetGroceryItemMethodDescriptor    = serviceServiceDescriptor.Methods().ByName("GetGroceryItem")
+	serviceCreateGroceryItemMethodDescriptor = serviceServiceDescriptor.Methods().ByName("CreateGroceryItem")
+	serviceUpdateGroceryItemMethodDescriptor = serviceServiceDescriptor.Methods().ByName("UpdateGroceryItem")
+	serviceListGroceryItemsMethodDescriptor  = serviceServiceDescriptor.Methods().ByName("ListGroceryItems")
+	serviceDeleteGroceryItemMethodDescriptor = serviceServiceDescriptor.Methods().ByName("DeleteGroceryItem")
 )
 
 // ServiceClient is a client for the octoback.groceries.v1.Service service.
@@ -71,6 +90,16 @@ type ServiceClient interface {
 	ListGroceryLists(context.Context, *connect.Request[v1.ListGroceryListsRequest]) (*connect.Response[v1.ListGroceryListsResponse], error)
 	// Delete a grocery list
 	DeleteGroceryList(context.Context, *connect.Request[v1.DeleteGroceryListRequest]) (*connect.Response[v1.DeleteGroceryListResponse], error)
+	// Get the grocery item.
+	GetGroceryItem(context.Context, *connect.Request[v1.GetGroceryItemRequest]) (*connect.Response[v1.GetGroceryItemResponse], error)
+	// Create a grocery item
+	CreateGroceryItem(context.Context, *connect.Request[v1.CreateGroceryItemRequest]) (*connect.Response[v1.CreateGroceryItemResponse], error)
+	// Update a grocery item
+	UpdateGroceryItem(context.Context, *connect.Request[v1.UpdateGroceryItemRequest]) (*connect.Response[v1.UpdateGroceryItemResponse], error)
+	// List grocery items
+	ListGroceryItems(context.Context, *connect.Request[v1.ListGroceryItemsRequest]) (*connect.Response[v1.ListGroceryItemsResponse], error)
+	// Delete a grocery item
+	DeleteGroceryItem(context.Context, *connect.Request[v1.DeleteGroceryItemRequest]) (*connect.Response[v1.DeleteGroceryItemResponse], error)
 }
 
 // NewServiceClient constructs a client for the octoback.groceries.v1.Service service. By default,
@@ -113,6 +142,36 @@ func NewServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...con
 			connect.WithSchema(serviceDeleteGroceryListMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		getGroceryItem: connect.NewClient[v1.GetGroceryItemRequest, v1.GetGroceryItemResponse](
+			httpClient,
+			baseURL+ServiceGetGroceryItemProcedure,
+			connect.WithSchema(serviceGetGroceryItemMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		createGroceryItem: connect.NewClient[v1.CreateGroceryItemRequest, v1.CreateGroceryItemResponse](
+			httpClient,
+			baseURL+ServiceCreateGroceryItemProcedure,
+			connect.WithSchema(serviceCreateGroceryItemMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		updateGroceryItem: connect.NewClient[v1.UpdateGroceryItemRequest, v1.UpdateGroceryItemResponse](
+			httpClient,
+			baseURL+ServiceUpdateGroceryItemProcedure,
+			connect.WithSchema(serviceUpdateGroceryItemMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		listGroceryItems: connect.NewClient[v1.ListGroceryItemsRequest, v1.ListGroceryItemsResponse](
+			httpClient,
+			baseURL+ServiceListGroceryItemsProcedure,
+			connect.WithSchema(serviceListGroceryItemsMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		deleteGroceryItem: connect.NewClient[v1.DeleteGroceryItemRequest, v1.DeleteGroceryItemResponse](
+			httpClient,
+			baseURL+ServiceDeleteGroceryItemProcedure,
+			connect.WithSchema(serviceDeleteGroceryItemMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -123,6 +182,11 @@ type serviceClient struct {
 	updateGroceryList *connect.Client[v1.UpdateGroceryListRequest, v1.UpdateGroceryListResponse]
 	listGroceryLists  *connect.Client[v1.ListGroceryListsRequest, v1.ListGroceryListsResponse]
 	deleteGroceryList *connect.Client[v1.DeleteGroceryListRequest, v1.DeleteGroceryListResponse]
+	getGroceryItem    *connect.Client[v1.GetGroceryItemRequest, v1.GetGroceryItemResponse]
+	createGroceryItem *connect.Client[v1.CreateGroceryItemRequest, v1.CreateGroceryItemResponse]
+	updateGroceryItem *connect.Client[v1.UpdateGroceryItemRequest, v1.UpdateGroceryItemResponse]
+	listGroceryItems  *connect.Client[v1.ListGroceryItemsRequest, v1.ListGroceryItemsResponse]
+	deleteGroceryItem *connect.Client[v1.DeleteGroceryItemRequest, v1.DeleteGroceryItemResponse]
 }
 
 // GetGroceryList calls octoback.groceries.v1.Service.GetGroceryList.
@@ -150,6 +214,31 @@ func (c *serviceClient) DeleteGroceryList(ctx context.Context, req *connect.Requ
 	return c.deleteGroceryList.CallUnary(ctx, req)
 }
 
+// GetGroceryItem calls octoback.groceries.v1.Service.GetGroceryItem.
+func (c *serviceClient) GetGroceryItem(ctx context.Context, req *connect.Request[v1.GetGroceryItemRequest]) (*connect.Response[v1.GetGroceryItemResponse], error) {
+	return c.getGroceryItem.CallUnary(ctx, req)
+}
+
+// CreateGroceryItem calls octoback.groceries.v1.Service.CreateGroceryItem.
+func (c *serviceClient) CreateGroceryItem(ctx context.Context, req *connect.Request[v1.CreateGroceryItemRequest]) (*connect.Response[v1.CreateGroceryItemResponse], error) {
+	return c.createGroceryItem.CallUnary(ctx, req)
+}
+
+// UpdateGroceryItem calls octoback.groceries.v1.Service.UpdateGroceryItem.
+func (c *serviceClient) UpdateGroceryItem(ctx context.Context, req *connect.Request[v1.UpdateGroceryItemRequest]) (*connect.Response[v1.UpdateGroceryItemResponse], error) {
+	return c.updateGroceryItem.CallUnary(ctx, req)
+}
+
+// ListGroceryItems calls octoback.groceries.v1.Service.ListGroceryItems.
+func (c *serviceClient) ListGroceryItems(ctx context.Context, req *connect.Request[v1.ListGroceryItemsRequest]) (*connect.Response[v1.ListGroceryItemsResponse], error) {
+	return c.listGroceryItems.CallUnary(ctx, req)
+}
+
+// DeleteGroceryItem calls octoback.groceries.v1.Service.DeleteGroceryItem.
+func (c *serviceClient) DeleteGroceryItem(ctx context.Context, req *connect.Request[v1.DeleteGroceryItemRequest]) (*connect.Response[v1.DeleteGroceryItemResponse], error) {
+	return c.deleteGroceryItem.CallUnary(ctx, req)
+}
+
 // ServiceHandler is an implementation of the octoback.groceries.v1.Service service.
 type ServiceHandler interface {
 	// Get the grocery list.
@@ -162,6 +251,16 @@ type ServiceHandler interface {
 	ListGroceryLists(context.Context, *connect.Request[v1.ListGroceryListsRequest]) (*connect.Response[v1.ListGroceryListsResponse], error)
 	// Delete a grocery list
 	DeleteGroceryList(context.Context, *connect.Request[v1.DeleteGroceryListRequest]) (*connect.Response[v1.DeleteGroceryListResponse], error)
+	// Get the grocery item.
+	GetGroceryItem(context.Context, *connect.Request[v1.GetGroceryItemRequest]) (*connect.Response[v1.GetGroceryItemResponse], error)
+	// Create a grocery item
+	CreateGroceryItem(context.Context, *connect.Request[v1.CreateGroceryItemRequest]) (*connect.Response[v1.CreateGroceryItemResponse], error)
+	// Update a grocery item
+	UpdateGroceryItem(context.Context, *connect.Request[v1.UpdateGroceryItemRequest]) (*connect.Response[v1.UpdateGroceryItemResponse], error)
+	// List grocery items
+	ListGroceryItems(context.Context, *connect.Request[v1.ListGroceryItemsRequest]) (*connect.Response[v1.ListGroceryItemsResponse], error)
+	// Delete a grocery item
+	DeleteGroceryItem(context.Context, *connect.Request[v1.DeleteGroceryItemRequest]) (*connect.Response[v1.DeleteGroceryItemResponse], error)
 }
 
 // NewServiceHandler builds an HTTP handler from the service implementation. It returns the path on
@@ -200,6 +299,36 @@ func NewServiceHandler(svc ServiceHandler, opts ...connect.HandlerOption) (strin
 		connect.WithSchema(serviceDeleteGroceryListMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	serviceGetGroceryItemHandler := connect.NewUnaryHandler(
+		ServiceGetGroceryItemProcedure,
+		svc.GetGroceryItem,
+		connect.WithSchema(serviceGetGroceryItemMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	serviceCreateGroceryItemHandler := connect.NewUnaryHandler(
+		ServiceCreateGroceryItemProcedure,
+		svc.CreateGroceryItem,
+		connect.WithSchema(serviceCreateGroceryItemMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	serviceUpdateGroceryItemHandler := connect.NewUnaryHandler(
+		ServiceUpdateGroceryItemProcedure,
+		svc.UpdateGroceryItem,
+		connect.WithSchema(serviceUpdateGroceryItemMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	serviceListGroceryItemsHandler := connect.NewUnaryHandler(
+		ServiceListGroceryItemsProcedure,
+		svc.ListGroceryItems,
+		connect.WithSchema(serviceListGroceryItemsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	serviceDeleteGroceryItemHandler := connect.NewUnaryHandler(
+		ServiceDeleteGroceryItemProcedure,
+		svc.DeleteGroceryItem,
+		connect.WithSchema(serviceDeleteGroceryItemMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/octoback.groceries.v1.Service/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ServiceGetGroceryListProcedure:
@@ -212,6 +341,16 @@ func NewServiceHandler(svc ServiceHandler, opts ...connect.HandlerOption) (strin
 			serviceListGroceryListsHandler.ServeHTTP(w, r)
 		case ServiceDeleteGroceryListProcedure:
 			serviceDeleteGroceryListHandler.ServeHTTP(w, r)
+		case ServiceGetGroceryItemProcedure:
+			serviceGetGroceryItemHandler.ServeHTTP(w, r)
+		case ServiceCreateGroceryItemProcedure:
+			serviceCreateGroceryItemHandler.ServeHTTP(w, r)
+		case ServiceUpdateGroceryItemProcedure:
+			serviceUpdateGroceryItemHandler.ServeHTTP(w, r)
+		case ServiceListGroceryItemsProcedure:
+			serviceListGroceryItemsHandler.ServeHTTP(w, r)
+		case ServiceDeleteGroceryItemProcedure:
+			serviceDeleteGroceryItemHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -239,4 +378,24 @@ func (UnimplementedServiceHandler) ListGroceryLists(context.Context, *connect.Re
 
 func (UnimplementedServiceHandler) DeleteGroceryList(context.Context, *connect.Request[v1.DeleteGroceryListRequest]) (*connect.Response[v1.DeleteGroceryListResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("octoback.groceries.v1.Service.DeleteGroceryList is not implemented"))
+}
+
+func (UnimplementedServiceHandler) GetGroceryItem(context.Context, *connect.Request[v1.GetGroceryItemRequest]) (*connect.Response[v1.GetGroceryItemResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("octoback.groceries.v1.Service.GetGroceryItem is not implemented"))
+}
+
+func (UnimplementedServiceHandler) CreateGroceryItem(context.Context, *connect.Request[v1.CreateGroceryItemRequest]) (*connect.Response[v1.CreateGroceryItemResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("octoback.groceries.v1.Service.CreateGroceryItem is not implemented"))
+}
+
+func (UnimplementedServiceHandler) UpdateGroceryItem(context.Context, *connect.Request[v1.UpdateGroceryItemRequest]) (*connect.Response[v1.UpdateGroceryItemResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("octoback.groceries.v1.Service.UpdateGroceryItem is not implemented"))
+}
+
+func (UnimplementedServiceHandler) ListGroceryItems(context.Context, *connect.Request[v1.ListGroceryItemsRequest]) (*connect.Response[v1.ListGroceryItemsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("octoback.groceries.v1.Service.ListGroceryItems is not implemented"))
+}
+
+func (UnimplementedServiceHandler) DeleteGroceryItem(context.Context, *connect.Request[v1.DeleteGroceryItemRequest]) (*connect.Response[v1.DeleteGroceryItemResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("octoback.groceries.v1.Service.DeleteGroceryItem is not implemented"))
 }
