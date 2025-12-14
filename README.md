@@ -4,8 +4,8 @@ A grocery list and recipe management app built with Go, Connect RPC, SQLite, and
 
 ## Prerequisites
 
-- Go 1.22+
-- Node.js 18+ and Yarn
+- Go 1.24+
+- Node.js 22+ and Yarn 4
 - [sqlc](https://sqlc.dev/) for query generation
 - [buf](https://buf.build/) for protobuf generation
 - [golang-migrate](https://github.com/golang-migrate/migrate) for database migrations
@@ -75,6 +75,7 @@ The web app will be available at `http://localhost:5173` (or the next available 
 |------|---------------------|---------|-------------|
 | `-port` | `PORT` | - | Port to listen on |
 | `-db-path` | `OCTOMEAL_DB_PATH` | `octoback.db` | Path to SQLite database file |
+| `-static-dir` | `STATIC_DIR` | - | Directory containing static files to serve (for production) |
 | `-auth0-domain` | `AUTH0_DOMAIN` | - | Auth0 domain |
 | `-auth0-audience` | `AUTH0_AUDIENCE` | - | Auth0 API audience |
 
@@ -99,4 +100,64 @@ The server exposes a Connect RPC API (gRPC-compatible) for managing grocery list
 - `TenantsService` - Tenant management and invitations
 
 See `proto/octoback/` for the full API definitions.
+
+## Deployment (Fly.io)
+
+The app is configured to deploy on [Fly.io](https://fly.io) with a persistent SQLite database.
+
+### Prerequisites
+
+Install the Fly CLI:
+
+```bash
+brew install flyctl
+fly auth login
+```
+
+### Initial Setup
+
+```bash
+# Create the app
+fly apps create octoback
+
+# Create a persistent volume for SQLite
+fly volumes create octoback_data --region cdg --size 1
+
+# Set backend secrets
+fly secrets set AUTH0_DOMAIN="your-tenant.us.auth0.com"
+fly secrets set AUTH0_AUDIENCE="your-api-audience"
+```
+
+### Deploy
+
+```bash
+fly deploy \
+  --build-arg VITE_AUTH0_DOMAIN="your-tenant.us.auth0.com" \
+  --build-arg VITE_AUTH0_CLIENT_ID="your-client-id" \
+  --build-arg VITE_AUTH0_AUDIENCE="your-api-audience"
+```
+
+### Run Migrations
+
+```bash
+fly ssh console
+cat migrations/*.up.sql | sqlite3 /data/octoback.db
+exit
+```
+
+### Auth0 Configuration
+
+Add these URLs to your Auth0 application settings:
+
+- **Allowed Callback URLs**: `https://octoback.fly.dev`
+- **Allowed Logout URLs**: `https://octoback.fly.dev`
+- **Allowed Web Origins**: `https://octoback.fly.dev`
+
+### Useful Commands
+
+```bash
+fly status       # Check app status
+fly logs         # View logs
+fly ssh console  # SSH into the machine
+```
 
