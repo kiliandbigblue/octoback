@@ -6,21 +6,31 @@ import {
   Box,
   Button,
   Card,
+  CopyButton,
   Container,
   Divider,
   Group,
   Loader,
-  SimpleGrid,
+  Modal,
   Stack,
   Text,
+  TextInput,
   ThemeIcon,
   Title,
+  Tooltip,
   useMantineColorScheme,
 } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ColorSchemeToggle } from '../components/ColorSchemeToggle/ColorSchemeToggle';
-import { useJoinTenant, useLeaveTenant, useMyTenants, useTenants } from '../hooks';
+import {
+  useAcceptInvitation,
+  useCreateInvitation,
+  useLeaveTenant,
+  useMyTenants,
+} from '../hooks';
 import { useAuth0 } from '../lib/auth0';
 import classes from './Settings.module.css';
 
@@ -52,10 +62,26 @@ function CheckIcon() {
   );
 }
 
-function PlusIcon() {
+function ShareIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2" />
+      <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+      <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2" />
+      <path d="M8.59 13.51L15.42 17.49M15.41 6.51L8.59 10.49" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
     </svg>
   );
 }
@@ -117,69 +143,150 @@ function OctopusLogo({ size = 48 }: { size?: number }) {
   );
 }
 
+const roleLabels: Record<string, string> = {
+  owner: 'Propriétaire',
+  admin: 'Admin',
+  member: 'Membre',
+};
+
+const roleColors: Record<string, string> = {
+  owner: 'coral',
+  admin: 'blue',
+  member: 'gray',
+};
+
 function TenantCard({
   name,
-  isMember,
+  role,
   isLoading,
-  onJoin,
   onLeave,
+  onInvite,
 }: {
   name: string;
-  isMember: boolean;
+  role: string;
   isLoading: boolean;
-  onJoin: () => void;
   onLeave: () => void;
+  onInvite: () => void;
 }) {
+  const canInvite = role === 'owner' || role === 'admin';
+  const canLeave = role !== 'owner';
+
   return (
-    <Card className={classes.tenantCard} data-member={isMember}>
+    <Card className={classes.tenantCard} data-member={true}>
       <Group justify="space-between" align="flex-start">
         <Group gap="md">
-          <ThemeIcon
-            size={48}
-            radius="xl"
-            variant={isMember ? 'filled' : 'light'}
-            color={isMember ? 'coral' : 'gray'}
-          >
+          <ThemeIcon size={48} radius="xl" variant="filled" color="coral">
             <HouseIcon />
           </ThemeIcon>
           <Stack gap={4}>
             <Text fw={600} size="lg">
               {name}
             </Text>
-            {isMember && (
-              <Badge variant="light" color="coral" size="sm">
-                Membre
-              </Badge>
-            )}
+            <Badge variant="light" color={roleColors[role] || 'gray'} size="sm">
+              {roleLabels[role] || role}
+            </Badge>
           </Stack>
         </Group>
 
-        {isLoading ? (
-          <Loader size="sm" color="coral" />
-        ) : isMember ? (
-          <Button
-            variant="subtle"
-            color="red"
-            size="xs"
-            onClick={onLeave}
-            className={classes.leaveButton}
-          >
-            Quitter
-          </Button>
-        ) : (
-          <ActionIcon
-            variant="light"
-            color="coral"
-            size="lg"
-            radius="xl"
-            onClick={onJoin}
-            className={classes.joinButton}
-          >
-            <PlusIcon />
-          </ActionIcon>
-        )}
+        <Group gap="xs">
+          {canInvite && (
+            <Tooltip label="Inviter quelqu'un">
+              <ActionIcon variant="light" color="coral" size="lg" radius="xl" onClick={onInvite}>
+                <ShareIcon />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          {isLoading ? (
+            <Loader size="sm" color="coral" />
+          ) : canLeave ? (
+            <Button
+              variant="subtle"
+              color="red"
+              size="xs"
+              onClick={onLeave}
+              className={classes.leaveButton}
+            >
+              Quitter
+            </Button>
+          ) : null}
+        </Group>
       </Group>
     </Card>
+  );
+}
+
+function InviteModal({
+  opened,
+  onClose,
+  tenantId,
+  tenantName,
+}: {
+  opened: boolean;
+  onClose: () => void;
+  tenantId: bigint;
+  tenantName: string;
+}) {
+  const createInvitationMutation = useCreateInvitation();
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+
+  const handleCreate = async () => {
+    const result = await createInvitationMutation.mutateAsync({ tenantId });
+    if (result.invitation?.inviteCode) {
+      setInviteCode(result.invitation.inviteCode);
+    }
+  };
+
+  const handleClose = () => {
+    setInviteCode(null);
+    onClose();
+  };
+
+  return (
+    <Modal opened={opened} onClose={handleClose} title={`Inviter dans "${tenantName}"`} centered>
+      <Stack gap="md">
+        {!inviteCode ? (
+          <>
+            <Text size="sm" c="dimmed">
+              Créez un code d'invitation à partager avec la personne que vous souhaitez inviter.
+              Le code expire après 7 jours.
+            </Text>
+            <Button
+              color="coral"
+              onClick={handleCreate}
+              loading={createInvitationMutation.isPending}
+              fullWidth
+            >
+              Créer un code d'invitation
+            </Button>
+          </>
+        ) : (
+          <>
+            <Text size="sm" c="dimmed">
+              Partagez ce code avec la personne que vous souhaitez inviter :
+            </Text>
+            <Card withBorder p="md">
+              <Group justify="space-between">
+                <Text fw={600} size="lg" ff="monospace">
+                  {inviteCode}
+                </Text>
+                <CopyButton value={inviteCode}>
+                  {({ copied, copy }) => (
+                    <Tooltip label={copied ? 'Copié !' : 'Copier'}>
+                      <ActionIcon color={copied ? 'teal' : 'coral'} variant="light" onClick={copy}>
+                        {copied ? <CheckIcon /> : <CopyIcon />}
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                </CopyButton>
+              </Group>
+            </Card>
+            <Button variant="light" color="coral" onClick={handleClose} fullWidth>
+              Fermer
+            </Button>
+          </>
+        )}
+      </Stack>
+    </Modal>
   );
 }
 
@@ -188,25 +295,54 @@ export function SettingsPage() {
   const { user, isAuthenticated, isLoading: authLoading, loginWithRedirect } = useAuth0();
   const queryClient = useQueryClient();
 
-  const { data: tenantsData, isLoading: tenantsLoading, error: tenantsError } = useTenants();
-  const { data: myTenantsData, isLoading: myTenantsLoading } = useMyTenants();
-
-  const joinTenantMutation = useJoinTenant();
+  const { data: myTenantsData, isLoading: myTenantsLoading, error: tenantsError } = useMyTenants();
   const leaveTenantMutation = useLeaveTenant();
+  const acceptInvitationMutation = useAcceptInvitation();
 
-  const myTenantIds = new Set(myTenantsData?.tenants?.map((t) => t.id) ?? []);
-
-  const handleJoin = async (tenantId: bigint) => {
-    await joinTenantMutation.mutateAsync({ tenantId });
-    queryClient.invalidateQueries({ queryKey: ['octoback.tenants.v1.Service'] });
-  };
+  const [inviteModalOpened, { open: openInviteModal, close: closeInviteModal }] =
+    useDisclosure(false);
+  const [selectedTenant, setSelectedTenant] = useState<{ id: bigint; name: string } | null>(null);
+  const [joinCode, setJoinCode] = useState('');
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   const handleLeave = async (tenantId: bigint) => {
     await leaveTenantMutation.mutateAsync({ tenantId });
     queryClient.invalidateQueries({ queryKey: ['octoback.tenants.v1.Service'] });
   };
 
-  const isLoading = authLoading || tenantsLoading || myTenantsLoading;
+  const handleInvite = (tenantId: bigint, tenantName: string) => {
+    setSelectedTenant({ id: tenantId, name: tenantName });
+    openInviteModal();
+  };
+
+  const handleJoin = async () => {
+    if (!joinCode.trim()) return;
+    setJoinError(null);
+    try {
+      await acceptInvitationMutation.mutateAsync({ inviteCode: joinCode.trim() });
+      setJoinCode('');
+      queryClient.invalidateQueries({ queryKey: ['octoback.tenants.v1.Service'] });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) {
+          setJoinError('Code d\'invitation invalide ou expiré');
+        } else if (error.message.includes('already')) {
+          setJoinError('Vous êtes déjà membre de ce foyer');
+        } else if (error.message.includes('expired')) {
+          setJoinError('Ce code d\'invitation a expiré');
+        } else {
+          setJoinError('Une erreur est survenue');
+        }
+      }
+    }
+  };
+
+  // Create a map of tenant ID to membership for quick lookup
+  const membershipMap = new Map(
+    myTenantsData?.memberships?.map((m) => [m.tenantId, m]) ?? []
+  );
+
+  const isLoading = authLoading || myTenantsLoading;
 
   if (authLoading) {
     return (
@@ -300,7 +436,7 @@ export function SettingsPage() {
               <Stack gap={4}>
                 <Title order={4}>Mes foyers</Title>
                 <Text c="dimmed" size="sm">
-                  Rejoignez un foyer pour partager vos recettes et listes de courses.
+                  Gérez vos foyers et invitez d'autres personnes à les rejoindre.
                 </Text>
               </Stack>
               {myTenantsData?.tenants && myTenantsData.tenants.length > 0 && (
@@ -322,41 +458,84 @@ export function SettingsPage() {
                 <Loader color="coral" />
               </Stack>
             ) : (
-              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                {tenantsData?.tenants?.map((tenant) => (
-                  <TenantCard
-                    key={tenant.id.toString()}
-                    name={tenant.name}
-                    isMember={myTenantIds.has(tenant.id)}
-                    isLoading={
-                      (joinTenantMutation.isPending &&
-                        joinTenantMutation.variables?.tenantId === tenant.id) ||
-                      (leaveTenantMutation.isPending &&
-                        leaveTenantMutation.variables?.tenantId === tenant.id)
-                    }
-                    onJoin={() => handleJoin(tenant.id)}
-                    onLeave={() => handleLeave(tenant.id)}
-                  />
-                ))}
-              </SimpleGrid>
+              <Stack gap="md">
+                {myTenantsData?.tenants?.map((tenant) => {
+                  const membership = membershipMap.get(tenant.id);
+                  return (
+                    <TenantCard
+                      key={tenant.id.toString()}
+                      name={tenant.name}
+                      role={membership?.role || 'member'}
+                      isLoading={
+                        leaveTenantMutation.isPending &&
+                        leaveTenantMutation.variables?.tenantId === tenant.id
+                      }
+                      onLeave={() => handleLeave(tenant.id)}
+                      onInvite={() => handleInvite(tenant.id, tenant.name)}
+                    />
+                  );
+                })}
+              </Stack>
             )}
 
-            {tenantsData?.tenants?.length === 0 && !isLoading && (
+            {myTenantsData?.tenants?.length === 0 && !isLoading && (
               <Card className={classes.emptyCard}>
                 <Stack align="center" gap="md" py="xl">
                   <ThemeIcon size={64} radius="xl" variant="light" color="gray">
                     <HouseIcon />
                   </ThemeIcon>
                   <Text c="dimmed" ta="center">
-                    Aucun foyer disponible pour le moment.
+                    Vous n'êtes membre d'aucun foyer.
                   </Text>
                 </Stack>
               </Card>
             )}
           </Stack>
+
+          <Divider />
+
+          {/* Join with invitation code */}
+          <Stack gap="md">
+            <Stack gap={4}>
+              <Title order={4}>Rejoindre un foyer</Title>
+              <Text c="dimmed" size="sm">
+                Entrez un code d'invitation pour rejoindre un foyer existant.
+              </Text>
+            </Stack>
+
+            <Group>
+              <TextInput
+                placeholder="Code d'invitation"
+                value={joinCode}
+                onChange={(e) => {
+                  setJoinCode(e.currentTarget.value);
+                  setJoinError(null);
+                }}
+                style={{ flex: 1 }}
+                error={joinError}
+              />
+              <Button
+                color="coral"
+                onClick={handleJoin}
+                loading={acceptInvitationMutation.isPending}
+                disabled={!joinCode.trim()}
+              >
+                Rejoindre
+              </Button>
+            </Group>
+          </Stack>
         </Stack>
       </Container>
+
+      {/* Invite Modal */}
+      {selectedTenant && (
+        <InviteModal
+          opened={inviteModalOpened}
+          onClose={closeInviteModal}
+          tenantId={selectedTenant.id}
+          tenantName={selectedTenant.name}
+        />
+      )}
     </Box>
   );
 }
-

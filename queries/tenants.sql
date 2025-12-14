@@ -76,3 +76,48 @@ SELECT COUNT(*) > 0 AS is_member
 FROM tenant_member
 WHERE tenant_id = ? AND user_id = ?;
 
+-- name: CountUserTenants :one
+SELECT COUNT(*) AS count
+FROM tenant_member
+WHERE user_id = ?;
+
+-- ============ Invitation Queries ============
+
+-- name: CreateTenantInvitation :one
+INSERT INTO tenant_invitation (tenant_id, invite_code, created_by, expires_at)
+VALUES (?, ?, ?, ?)
+RETURNING *;
+
+-- name: GetTenantInvitationByCode :one
+SELECT *
+FROM tenant_invitation
+WHERE invite_code = ?
+LIMIT 1;
+
+-- name: GetTenantInvitation :one
+SELECT *
+FROM tenant_invitation
+WHERE id = ?
+LIMIT 1;
+
+-- name: ListTenantInvitations :many
+SELECT *
+FROM tenant_invitation
+WHERE tenant_id = ?
+ORDER BY created_at DESC;
+
+-- name: MarkInvitationUsed :one
+UPDATE tenant_invitation
+SET used_at = datetime('now'), used_by = ?
+WHERE id = ? AND used_at IS NULL
+RETURNING *;
+
+-- name: DeleteTenantInvitation :one
+DELETE FROM tenant_invitation
+WHERE id = ?
+RETURNING *;
+
+-- name: DeleteExpiredInvitations :exec
+DELETE FROM tenant_invitation
+WHERE expires_at IS NOT NULL AND expires_at < datetime('now') AND used_at IS NULL;
+

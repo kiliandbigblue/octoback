@@ -8,22 +8,36 @@ option go_package = "github.com/kiliandbigblue/octoback/tenants/v1;tenants";
 
 // Service is the tenants service.
 service Service {
-    // ListTenants lists all available tenants.
-    rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+    // EnsureUserTenant ensures the current user has at least one tenant.
+    // If the user has no tenant, a personal tenant is created.
+    rpc EnsureUserTenant(EnsureUserTenantRequest) returns (EnsureUserTenantResponse);
     // GetMyTenants lists tenants the current user is a member of.
     rpc GetMyTenants(GetMyTenantsRequest) returns (GetMyTenantsResponse);
-    // JoinTenant adds the current user to a tenant.
-    rpc JoinTenant(JoinTenantRequest) returns (JoinTenantResponse);
     // LeaveTenant removes the current user from a tenant.
     rpc LeaveTenant(LeaveTenantRequest) returns (LeaveTenantResponse);
+    // CreateInvitation creates an invitation code for a tenant.
+    rpc CreateInvitation(CreateInvitationRequest) returns (CreateInvitationResponse);
+    // AcceptInvitation accepts an invitation and joins the tenant.
+    rpc AcceptInvitation(AcceptInvitationRequest) returns (AcceptInvitationResponse);
+    // ListInvitations lists invitations for a tenant (owner/admin only).
+    rpc ListInvitations(ListInvitationsRequest) returns (ListInvitationsResponse);
+    // RevokeInvitation revokes an invitation (owner/admin only).
+    rpc RevokeInvitation(RevokeInvitationRequest) returns (RevokeInvitationResponse);
 }
 
-message ListTenantsRequest {}
+// EnsureUserTenant
+message EnsureUserTenantRequest {}
 
-message ListTenantsResponse {
-    repeated Tenant tenants = 1;
+message EnsureUserTenantResponse {
+    // The tenant that was created or already existed.
+    Tenant tenant = 1;
+    // The membership for the user.
+    TenantMembership membership = 2;
+    // True if a new tenant was created, false if one already existed.
+    bool created = 3;
 }
 
+// GetMyTenants
 message GetMyTenantsRequest {}
 
 message GetMyTenantsResponse {
@@ -31,16 +45,7 @@ message GetMyTenantsResponse {
     repeated Tenant tenants = 2;
 }
 
-message JoinTenantRequest {
-    // The ID of the tenant to join.
-    int64 tenant_id = 1;
-}
-
-message JoinTenantResponse {
-    // The membership that was created.
-    TenantMembership membership = 1;
-}
-
+// LeaveTenant
 message LeaveTenantRequest {
     // The ID of the tenant to leave.
     int64 tenant_id = 1;
@@ -48,3 +53,44 @@ message LeaveTenantRequest {
 
 message LeaveTenantResponse {}
 
+// CreateInvitation
+message CreateInvitationRequest {
+    // The ID of the tenant to create an invitation for.
+    int64 tenant_id = 1;
+}
+
+message CreateInvitationResponse {
+    // The created invitation.
+    TenantInvitation invitation = 1;
+}
+
+// AcceptInvitation
+message AcceptInvitationRequest {
+    // The invitation code to accept.
+    string invite_code = 1;
+}
+
+message AcceptInvitationResponse {
+    // The tenant that was joined.
+    Tenant tenant = 1;
+    // The membership that was created.
+    TenantMembership membership = 2;
+}
+
+// ListInvitations
+message ListInvitationsRequest {
+    // The ID of the tenant to list invitations for.
+    int64 tenant_id = 1;
+}
+
+message ListInvitationsResponse {
+    repeated TenantInvitation invitations = 1;
+}
+
+// RevokeInvitation
+message RevokeInvitationRequest {
+    // The ID of the invitation to revoke.
+    int64 invitation_id = 1;
+}
+
+message RevokeInvitationResponse {}

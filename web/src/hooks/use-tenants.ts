@@ -1,19 +1,15 @@
 import { useMutation, useQuery } from '@connectrpc/connect-query';
 import {
+  acceptInvitation,
+  createInvitation,
+  ensureUserTenant,
   getMyTenants,
-  joinTenant,
   leaveTenant,
-  listTenants,
+  listInvitations,
+  revokeInvitation,
 } from '../gen/octoback/tenants/v1/service-Service_connectquery';
 
 // ============ Query Hooks ============
-
-/**
- * Fetch all available tenants
- */
-export function useTenants() {
-  return useQuery(listTenants, {});
-}
 
 /**
  * Fetch tenants the current user is a member of
@@ -22,13 +18,20 @@ export function useMyTenants() {
   return useQuery(getMyTenants, {});
 }
 
+/**
+ * List invitations for a specific tenant (owner/admin only)
+ */
+export function useListInvitations(tenantId: bigint) {
+  return useQuery(listInvitations, { tenantId });
+}
+
 // ============ Mutation Hooks ============
 
 /**
- * Join a tenant
+ * Ensure the user has a tenant (creates one if needed)
  */
-export function useJoinTenant() {
-  return useMutation(joinTenant);
+export function useEnsureUserTenant() {
+  return useMutation(ensureUserTenant);
 }
 
 /**
@@ -38,3 +41,23 @@ export function useLeaveTenant() {
   return useMutation(leaveTenant);
 }
 
+/**
+ * Create an invitation for a tenant
+ */
+export function useCreateInvitation() {
+  return useMutation(createInvitation);
+}
+
+/**
+ * Accept an invitation to join a tenant
+ */
+export function useAcceptInvitation() {
+  return useMutation(acceptInvitation);
+}
+
+/**
+ * Revoke an invitation
+ */
+export function useRevokeInvitation() {
+  return useMutation(revokeInvitation);
+}
