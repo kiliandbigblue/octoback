@@ -18,6 +18,7 @@ import (
 	store "github.com/kiliandbigblue/octoback/gen/store/v1"
 	groceriesv1 "github.com/kiliandbigblue/octoback/internal/groceries/v1"
 	recipesv1 "github.com/kiliandbigblue/octoback/internal/recipes/v1"
+	"github.com/kiliandbigblue/octoback/internal/x/auth0"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -27,14 +28,18 @@ import (
 
 // The config struct holds configuration for the server.
 type config struct {
-	port   string
-	dbPath string
+	port          string
+	dbPath        string
+	auth0Domain   string
+	auth0Audience string
 }
 
 func main() {
 	var cfg config
 	flag.StringVar(&cfg.port, "port", os.Getenv("PORT"), "port to listen on")
 	flag.StringVar(&cfg.dbPath, "db-path", os.Getenv("OCTOMEAL_DB_PATH"), "SQLite database file path")
+	flag.StringVar(&cfg.auth0Domain, "auth0-domain", os.Getenv("AUTH0_DOMAIN"), "Auth0 domain (e.g., your-tenant.auth0.com)")
+	flag.StringVar(&cfg.auth0Audience, "auth0-audience", os.Getenv("AUTH0_AUDIENCE"), "Auth0 API audience identifier")
 	flag.Parse()
 
 	if cfg.dbPath == "" {
@@ -49,6 +54,11 @@ func main() {
 		panic(err)
 	}
 
+	// Validate Auth0 configuration
+	if cfg.auth0Domain == "" || cfg.auth0Audience == "" {
+		log.Fatal("AUTH0_DOMAIN and AUTH0_AUDIENCE environment variables are required")
+	}
+
 	db, err := openDB(cfg)
 	if err != nil {
 		log.Fatal("failed to open database", zap.Error(err))
@@ -57,6 +67,19 @@ func main() {
 		_ = db.Close()
 	}()
 	log.Info("database connection established", zap.String("path", cfg.dbPath))
+
+	// Initialize Auth0 validator
+	auth0Validator, err := auth0.NewValidator(auth0.Config{
+		Domain:   cfg.auth0Domain,
+		Audience: cfg.auth0Audience,
+	}, log)
+	if err != nil {
+		log.Fatal("failed to create Auth0 validator", zap.Error(err))
+	}
+	log.Info("Auth0 validator initialized",
+		zap.String("domain", cfg.auth0Domain),
+		zap.String("audience", cfg.auth0Audience),
+	)
 
 	querier := store.New(db)
 	groceriesSvc := groceriesv1.NewService(querier)
@@ -68,21 +91,24 @@ func main() {
 	}
 
 	li := cloudzap.NewLoggerInterceptor(log)
+	ai := auth0.NewAuthInterceptor(auth0Validator)
+
+	// Interceptors are executed in order: auth first, then logging, then validation
+	interceptors := connect.WithInterceptors(ai, li, vi)
 
 	mux := http.NewServeMux()
-	groceriesPath, groceriesHandler := groceriesv1connect.NewServiceHandler(groceriesSvc, connect.WithInterceptors(vi, li))
+	groceriesPath, groceriesHandler := groceriesv1connect.NewServiceHandler(groceriesSvc, interceptors)
 	mux.Handle(groceriesPath, groceriesHandler)
-	recipesPath, recipesHandler := recipesv1connect.NewServiceHandler(recipesSvc, connect.WithInterceptors(vi, li))
+	recipesPath, recipesHandler := recipesv1connect.NewServiceHandler(recipesSvc, interceptors)
 	mux.Handle(recipesPath, recipesHandler)
+
+	// Wrap with CORS middleware to allow Authorization header
+	handler := auth0.CORSMiddleware(h2c.NewHandler(mux, &http2.Server{}))
 
 	log.Info("starting server", zap.String("port", cfg.port))
 
 	//nolint:gosec //No timeout.
-	err = http.ListenAndServe(
-		"0.0.0.0:"+cfg.port,
-		// Use h2c so we can serve HTTP/2 without TLS.
-		h2c.NewHandler(mux, &http2.Server{}),
-	)
+	err = http.ListenAndServe("0.0.0.0:"+cfg.port, handler)
 	if err != nil {
 		log.Fatal("server crashed", zap.Error(err))
 	}

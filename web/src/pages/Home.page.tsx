@@ -10,7 +10,9 @@ import {
   Title,
   useMantineColorScheme,
 } from '@mantine/core';
+import { AuthButton } from '../components/AuthButton/AuthButton';
 import { ColorSchemeToggle } from '../components/ColorSchemeToggle/ColorSchemeToggle';
+import { useAuth0 } from '../lib/auth0';
 import classes from './Home.module.css';
 
 function OctopusLogo({ size = 48 }: { size?: number }) {
@@ -169,6 +171,7 @@ function FeatureCard({
 export function HomePage() {
   const { colorScheme } = useMantineColorScheme();
   const isDark = colorScheme === 'dark';
+  const { loginWithRedirect, isAuthenticated } = useAuth0();
 
   return (
     <Box className={classes.wrapper} data-theme={colorScheme}>
@@ -194,12 +197,7 @@ export function HomePage() {
             </Group>
             <Group>
               <ColorSchemeToggle />
-              <Button variant="light" color="coral" radius="xl">
-                Connexion
-              </Button>
-              <Button color="coral" radius="xl">
-                Commencer
-              </Button>
+              <AuthButton />
             </Group>
           </Group>
         </Container>
@@ -245,8 +243,15 @@ export function HomePage() {
               radius="xl"
               color="coral"
               className={classes.ctaButton}
+              onClick={() =>
+                loginWithRedirect({
+                  authorizationParams: {
+                    screen_hint: 'signup',
+                  },
+                })
+              }
             >
-              Commencer gratuitement
+              {isAuthenticated ? 'Accéder à l\'app' : 'Commencer gratuitement'}
             </Button>
             <Button
               size="xl"
@@ -324,8 +329,20 @@ export function HomePage() {
               Rejoignez des milliers de cuisiniers qui ont déjà adopté OctoPlanner
               pour organiser leur semaine culinaire.
             </Text>
-            <Button size="xl" radius="xl" color="white" c="coral.6">
-              Créer un compte gratuit
+            <Button
+              size="xl"
+              radius="xl"
+              color="white"
+              c="coral.6"
+              onClick={() =>
+                loginWithRedirect({
+                  authorizationParams: {
+                    screen_hint: 'signup',
+                  },
+                })
+              }
+            >
+              {isAuthenticated ? 'Accéder à l\'app' : 'Créer un compte gratuit'}
             </Button>
           </Box>
         </Container>

@@ -59,6 +59,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@auth0/auth0-react@npm:^2.11.0":
+  version: 2.11.0
+  resolution: "@auth0/auth0-react@npm:2.11.0"
+  dependencies:
+    "@auth0/auth0-spa-js": "npm:^2.11.0"
+  peerDependencies:
+    react: ^16.11.0 || ^17 || ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
+    react-dom: ^16.11.0 || ^17 || ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
+  checksum: 10c0/d061771d1e6a483d85dfdaaa76f6717c48f42f39c6a249f8bbaface23575b51196f6720cac0de10f121d2ffc160d6a0e3d3d6c531a0a9ada5931e956d2602e77
+  languageName: node
+  linkType: hard
+
+"@auth0/auth0-spa-js@npm:^2.11.0":
+  version: 2.11.0
+  resolution: "@auth0/auth0-spa-js@npm:2.11.0"
+  dependencies:
+    browser-tabs-lock: "npm:^1.2.15"
+    dpop: "npm:^2.1.1"
+    es-cookie: "npm:~1.3.2"
+  checksum: 10c0/93fb4ef23f8d989af59c4fae8500dec6621781d26b0a0016da11884b6b4aad726184cf3621876a2992627538513af7d4c923d047d15d8daf5551e4133a6f9b1e
+  languageName: node
+  linkType: hard
+
 "@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.25.9":
   version: 7.26.2
   resolution: "@babel/code-frame@npm:7.26.2"
@@ -2894,6 +2917,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"browser-tabs-lock@npm:^1.2.15":
+  version: 1.3.0
+  resolution: "browser-tabs-lock@npm:1.3.0"
+  dependencies:
+    lodash: "npm:>=4.17.21"
+  checksum: 10c0/b1f9cbd221725cf3228daf42360ea6a97f69b29e0475ef734bc5a6bd5c27b61f99db716c49808988a1c735d828207dcaa3a8802e605d0195538fbf9e25d1753b
+  languageName: node
+  linkType: hard
+
 "browserslist@npm:^4.24.0":
   version: 4.24.0
   resolution: "browserslist@npm:4.24.0"
@@ -3506,6 +3538,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dpop@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "dpop@npm:2.1.1"
+  checksum: 10c0/e46dfd62325dd63372a17492c1867f79cdaf235645d32b87c3be8a09d4c7b03b8b44efec26688ba19e8279c77497a08deb302a9a4704b432795efd1163519611
+  languageName: node
+  linkType: hard
+
 "dunder-proto@npm:^1.0.0, dunder-proto@npm:^1.0.1":
   version: 1.0.1
   resolution: "dunder-proto@npm:1.0.1"
@@ -3801,6 +3840,13 @@ __metadata:
     unbox-primitive: "npm:^1.1.0"
     which-typed-array: "npm:^1.1.18"
   checksum: 10c0/1de229c9e08fe13c17fe5abaec8221545dfcd57e51f64909599a6ae896df84b8fd2f7d16c60cb00d7bf495b9298ca3581aded19939d4b7276854a4b066f8422b
+  languageName: node
+  linkType: hard
+
+"es-cookie@npm:~1.3.2":
+  version: 1.3.2
+  resolution: "es-cookie@npm:1.3.2"
+  checksum: 10c0/26eb6e06b25b5569d8763fcb23b5335a5098e354b0a9a7bc5122e8c8705003307187a165ddaeda5cff08fa4cc8e1675dbddd5709279fb27cfa8875514dc3eccb
   languageName: node
   linkType: hard
 
@@ -5918,6 +5964,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash@npm:>=4.17.21":
+  version: 4.17.21
+  resolution: "lodash@npm:4.17.21"
+  checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
+  languageName: node
+  linkType: hard
+
 "loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
@@ -6043,6 +6096,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "mantine-vite-template@workspace:."
   dependencies:
+    "@auth0/auth0-react": "npm:^2.11.0"
     "@bufbuild/protobuf": "npm:^1"
     "@bufbuild/protoc-gen-es": "npm:^1"
     "@connectrpc/connect": "npm:^1"

@@ -21,6 +21,7 @@
     "storybook:build": "storybook build"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.11.0",
     "@bufbuild/protobuf": "^1",
     "@connectrpc/connect": "^1",
     "@connectrpc/connect-query": "^1",
