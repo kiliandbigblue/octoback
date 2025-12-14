@@ -48,11 +48,11 @@ message CreateRecipeRequest {
     // The recipe description.
     string description = 2;
     // The number of servings.
-    int32 servings = 3 [(buf.validate.field).int32.gt = 0];
+    int32 servings = 3;
     // Preparation time in minutes.
-    int32 prep_time_minutes = 4 [(buf.validate.field).int32.gte = 0];
+    int32 prep_time_minutes = 4;
     // Cooking time in minutes.
-    int32 cook_time_minutes = 5 [(buf.validate.field).int32.gte = 0];
+    int32 cook_time_minutes = 5;
 }
 
 message CreateRecipeResponse {
