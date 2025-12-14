@@ -1,0 +1,57 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+.cursor
+*.swp
+*.swo
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
+**/*_test.go
+
+# Go
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Database files (local dev only)
+*.db
+data.db
+octoback.db
+
+# Node.js
+web/node_modules
+web/.yarn/cache
+web/.yarn/unplugged
+web/dist
+web/storybook-static
+web/.storybook
+
+# Misc
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Fly.io
+fly.toml
+

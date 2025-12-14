@@ -4,8 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"io/fs"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -33,6 +36,7 @@ import (
 type config struct {
 	port          string
 	dbPath        string
+	staticDir     string
 	auth0Domain   string
 	auth0Audience string
 }
@@ -41,6 +45,7 @@ func main() {
 	var cfg config
 	flag.StringVar(&cfg.port, "port", os.Getenv("PORT"), "port to listen on")
 	flag.StringVar(&cfg.dbPath, "db-path", os.Getenv("OCTOMEAL_DB_PATH"), "SQLite database file path")
+	flag.StringVar(&cfg.staticDir, "static-dir", os.Getenv("STATIC_DIR"), "directory containing static files to serve")
 	flag.StringVar(&cfg.auth0Domain, "auth0-domain", os.Getenv("AUTH0_DOMAIN"), "Auth0 domain (e.g., your-tenant.auth0.com)")
 	flag.StringVar(&cfg.auth0Audience, "auth0-audience", os.Getenv("AUTH0_AUDIENCE"), "Auth0 API audience identifier")
 	flag.Parse()
@@ -116,6 +121,12 @@ func main() {
 	tenantsPath, tenantsHandler := tenantsv1connect.NewServiceHandler(tenantsSvc, tenantInterceptors)
 	mux.Handle(tenantsPath, tenantsHandler)
 
+	// Serve static files if configured (for production deployment)
+	if cfg.staticDir != "" {
+		log.Info("serving static files", zap.String("dir", cfg.staticDir))
+		mux.Handle("/", spaHandler(cfg.staticDir))
+	}
+
 	// Wrap with CORS middleware to allow Authorization header
 	handler := auth0.CORSMiddleware(h2c.NewHandler(mux, &http2.Server{}))
 
@@ -148,4 +159,51 @@ func openDB(cfg config) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+// spaHandler returns a handler that serves static files with SPA fallback.
+// For any request that doesn't match a static file, it serves index.html.
+func spaHandler(staticDir string) http.Handler {
+	fileServer := http.FileServer(http.Dir(staticDir))
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Clean the path to prevent directory traversal
+		path := filepath.Clean(r.URL.Path)
+		if path == "/" {
+			path = "/index.html"
+		}
+
+		// Check if the file exists
+		fullPath := filepath.Join(staticDir, path)
+		info, err := os.Stat(fullPath)
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				// File doesn't exist, serve index.html for SPA routing
+				http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
+				return
+			}
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		// Don't serve directories directly
+		if info.IsDir() {
+			// Try to serve index.html from the directory
+			indexPath := filepath.Join(fullPath, "index.html")
+			if _, err := os.Stat(indexPath); err == nil {
+				http.ServeFile(w, r, indexPath)
+				return
+			}
+			// Fall back to SPA index.html
+			http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
+			return
+		}
+
+		// Set cache headers for static assets
+		if strings.HasPrefix(path, "/assets/") {
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		}
+
+		fileServer.ServeHTTP(w, r)
+	})
 }
