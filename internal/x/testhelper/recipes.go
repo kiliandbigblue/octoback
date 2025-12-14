@@ -2,6 +2,7 @@ package testhelper
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"math/big"
 	"time"
 
@@ -33,6 +34,10 @@ func FakeRecipe() *models.Recipe {
 }
 
 func FakeStoreRecipe() store.Recipe {
+	return FakeStoreRecipeWithTenant(FakeTenantID())
+}
+
+func FakeStoreRecipeWithTenant(tenantID int64) store.Recipe {
 	servings, _ := rand.Int(rand.Reader, big.NewInt(8))
 	prepTime, _ := rand.Int(rand.Reader, big.NewInt(60))
 	cookTime, _ := rand.Int(rand.Reader, big.NewInt(120))
@@ -45,6 +50,7 @@ func FakeStoreRecipe() store.Recipe {
 		CookTimeMinutes: cookTime.Int64(),
 		CreatedAt:       time.Now().Format("2006-01-02 15:04:05"),
 		Version:         1,
+		TenantID:        sql.NullInt64{Int64: tenantID, Valid: true},
 	}
 }
 
@@ -75,4 +81,3 @@ func FakeStoreRecipeIngredient(recipe int64) store.RecipeIngredient {
 		Version:   1,
 	}
 }
-

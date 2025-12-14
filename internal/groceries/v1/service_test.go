@@ -12,6 +12,7 @@ import (
 	store "github.com/kiliandbigblue/octoback/gen/store/v1"
 	"github.com/kiliandbigblue/octoback/internal/groceries/v1/mocks"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
+	"github.com/kiliandbigblue/octoback/internal/x/tenant"
 	"github.com/kiliandbigblue/octoback/internal/x/testhelper"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -22,10 +23,11 @@ import (
 
 type serviceTestSuite struct {
 	suite.Suite
-	log     *zap.Logger
-	ctx     context.Context
-	s       *Service
-	querier *mocks.Querier
+	log      *zap.Logger
+	ctx      context.Context
+	tenantID int64
+	s        *Service
+	querier  *mocks.Querier
 }
 
 func TestServiceTestSuite(t *testing.T) {
@@ -34,16 +36,26 @@ func TestServiceTestSuite(t *testing.T) {
 
 func (s *serviceTestSuite) SetupTest() {
 	s.log = zap.NewNop()
+	s.tenantID = testhelper.FakeTenantID()
 	s.ctx = cloudzap.WithLogger(context.Background(), s.log)
+	s.ctx = tenant.WithTenantID(s.ctx, s.tenantID)
 	s.querier = mocks.NewQuerier(s.T())
 	s.s = NewService(s.querier)
 }
 
+// Helper to create a NullInt64 from the test suite's tenant ID
+func (s *serviceTestSuite) tenantIDParam() sql.NullInt64 {
+	return sql.NullInt64{Int64: s.tenantID, Valid: true}
+}
+
 // Test that we can retrieve a grocery list by its ID.
 func (s *serviceTestSuite) TestGetGroceryList_OK() {
-	gl := testhelper.FakeStoreGroceryList()
+	gl := testhelper.FakeStoreGroceryListWithTenant(s.tenantID)
 
-	s.querier.EXPECT().GetGroceryList(s.ctx, gl.ID).Return(gl, nil)
+	s.querier.EXPECT().GetGroceryList(s.ctx, store.GetGroceryListParams{
+		ID:       gl.ID,
+		TenantID: s.tenantIDParam(),
+	}).Return(gl, nil)
 
 	response, err := s.s.GetGroceryList(s.ctx, connect.NewRequest(&models.GetGroceryListRequest{
 		Id: gl.ID,
@@ -68,11 +80,15 @@ func (s *serviceTestSuite) TestGetGroceryList_Err_NotFound() {
 func (s *serviceTestSuite) TestCreateGroceryList_Ok() {
 	name := "My first grocery list"
 
-	s.querier.EXPECT().CreateGroceryList(s.ctx, name).Return(store.GroceryList{
+	s.querier.EXPECT().CreateGroceryList(s.ctx, store.CreateGroceryListParams{
+		Name:     name,
+		TenantID: s.tenantIDParam(),
+	}).Return(store.GroceryList{
 		ID:        testhelper.FakeGroceryListID(),
 		Name:      name,
 		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
 		Version:   1,
+		TenantID:  s.tenantIDParam(),
 	}, nil)
 
 	response, err := s.s.CreateGroceryList(s.ctx, connect.NewRequest(&models.CreateGroceryListRequest{
@@ -96,17 +112,21 @@ func (s *serviceTestSuite) TestCreateGroceryList_Err() {
 
 // Test that we can update a grocery list.
 func (s *serviceTestSuite) TestUpdateGroceryList_Ok() {
-	actual := testhelper.FakeStoreGroceryList()
+	actual := testhelper.FakeStoreGroceryListWithTenant(s.tenantID)
 
 	input := actual
 	input.Name = fake.Characters()
 
-	s.querier.EXPECT().GetGroceryList(s.ctx, actual.ID).Return(actual, nil)
+	s.querier.EXPECT().GetGroceryList(s.ctx, store.GetGroceryListParams{
+		ID:       actual.ID,
+		TenantID: s.tenantIDParam(),
+	}).Return(actual, nil)
 
 	s.querier.EXPECT().UpdateGroceryList(s.ctx, store.UpdateGroceryListParams{
-		ID:      input.ID,
-		Name:    input.Name,
-		Version: input.Version,
+		ID:       input.ID,
+		Name:     input.Name,
+		TenantID: s.tenantIDParam(),
+		Version:  input.Version,
 	}).Return(input, nil)
 
 	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
@@ -133,7 +153,10 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_InvalidMask() {
 func (s *serviceTestSuite) TestUpdateGroceryList_Err_NotFound() {
 	gl := testhelper.FakeGroceryList()
 
-	s.querier.EXPECT().GetGroceryList(s.ctx, gl.GetId()).Return(store.GroceryList{}, sql.ErrNoRows)
+	s.querier.EXPECT().GetGroceryList(s.ctx, store.GetGroceryListParams{
+		ID:       gl.GetId(),
+		TenantID: s.tenantIDParam(),
+	}).Return(store.GroceryList{}, sql.ErrNoRows)
 
 	response, err := s.s.UpdateGroceryList(s.ctx, connect.NewRequest(&models.UpdateGroceryListRequest{
 		GroceryList: gl,
@@ -146,10 +169,10 @@ func (s *serviceTestSuite) TestUpdateGroceryList_Err_NotFound() {
 
 // Test that we can list all grocery lists.
 func (s *serviceTestSuite) TestListGroceryLists_Ok() {
-	gl1 := testhelper.FakeStoreGroceryList()
-	gl2 := testhelper.FakeStoreGroceryList()
+	gl1 := testhelper.FakeStoreGroceryListWithTenant(s.tenantID)
+	gl2 := testhelper.FakeStoreGroceryListWithTenant(s.tenantID)
 
-	s.querier.EXPECT().ListGroceryLists(s.ctx).Return([]store.GroceryList{gl1, gl2}, nil)
+	s.querier.EXPECT().ListGroceryLists(s.ctx, s.tenantIDParam()).Return([]store.GroceryList{gl1, gl2}, nil)
 
 	response, err := s.s.ListGroceryLists(s.ctx, connect.NewRequest(&models.ListGroceryListsRequest{}))
 	s.NoError(err)
@@ -160,7 +183,10 @@ func (s *serviceTestSuite) TestListGroceryLists_Ok() {
 func (s *serviceTestSuite) TestDeleteGroceryList_Ok() {
 	id := testhelper.FakeGroceryListID()
 
-	s.querier.EXPECT().DeleteGroceryList(s.ctx, id).Return(store.GroceryList{}, nil)
+	s.querier.EXPECT().DeleteGroceryList(s.ctx, store.DeleteGroceryListParams{
+		ID:       id,
+		TenantID: s.tenantIDParam(),
+	}).Return(store.GroceryList{}, nil)
 
 	_, err := s.s.DeleteGroceryList(s.ctx, connect.NewRequest(&models.DeleteGroceryListRequest{
 		Id: id,
@@ -183,7 +209,10 @@ func (s *serviceTestSuite) TestDeleteGroceryList_Err_NotFound() {
 func (s *serviceTestSuite) TestGetGroceryItem_OK() {
 	gl := testhelper.FakeStoreGroceryItem(testhelper.FakeGroceryListID())
 
-	s.querier.EXPECT().GetGroceryItem(s.ctx, gl.ID).Return(gl, nil)
+	s.querier.EXPECT().GetGroceryItem(s.ctx, store.GetGroceryItemParams{
+		ID:       gl.ID,
+		TenantID: s.tenantIDParam(),
+	}).Return(gl, nil)
 
 	response, err := s.s.GetGroceryItem(s.ctx, connect.NewRequest(&models.GetGroceryItemRequest{
 		Id: gl.ID,
@@ -209,6 +238,12 @@ func (s *serviceTestSuite) TestCreateGroceryItem_Ok() {
 	gil := testhelper.FakeGroceryListID()
 	git := testhelper.FakeStoreGroceryItem(gil)
 
+	// First, verify the grocery list exists
+	s.querier.EXPECT().GetGroceryList(s.ctx, store.GetGroceryListParams{
+		ID:       gil,
+		TenantID: s.tenantIDParam(),
+	}).Return(testhelper.FakeStoreGroceryListWithTenant(s.tenantID), nil)
+
 	s.querier.EXPECT().CreateGroceryItem(s.ctx, store.CreateGroceryItemParams{
 		GroceryListID: gil,
 		Name:          git.Name,
@@ -226,15 +261,17 @@ func (s *serviceTestSuite) TestCreateGroceryItem_Ok() {
 	s.NotEmpty(response.Msg.GetGroceryItem().GetId())
 }
 
-// Test that we can't create a grocery item with an empty name.
-func (s *serviceTestSuite) TestCreateGroceryItem_Err() {
-	s.querier.EXPECT().CreateGroceryItem(s.ctx, mock.Anything).Return(store.GroceryItem{}, sql.ErrNoRows)
+// Test that we can't create a grocery item when the grocery list doesn't exist.
+func (s *serviceTestSuite) TestCreateGroceryItem_Err_GroceryListNotFound() {
+	s.querier.EXPECT().GetGroceryList(s.ctx, mock.Anything).Return(store.GroceryList{}, sql.ErrNoRows)
 
 	response, err := s.s.CreateGroceryItem(s.ctx, connect.NewRequest(&models.CreateGroceryItemRequest{
-		Name: "",
+		GroceryList: testhelper.FakeGroceryListID(),
+		Name:        "Test Item",
 	}))
 	s.Error(err)
 	s.Nil(response)
+	s.Equal(connect.CodeNotFound, connect.CodeOf(err))
 }
 
 // Test that we can update a grocery item.
@@ -247,7 +284,10 @@ func (s *serviceTestSuite) TestUpdateGroceryItem_Ok() {
 	input.Quantity = actual.Quantity + 1
 	input.Checked = 1 - actual.Checked // Toggle between 0 and 1
 
-	s.querier.EXPECT().GetGroceryItem(s.ctx, actual.ID).Return(actual, nil)
+	s.querier.EXPECT().GetGroceryItem(s.ctx, store.GetGroceryItemParams{
+		ID:       actual.ID,
+		TenantID: s.tenantIDParam(),
+	}).Return(actual, nil)
 
 	s.querier.EXPECT().UpdateGroceryItem(s.ctx, store.UpdateGroceryItemParams{
 		ID:       actual.ID,
@@ -281,7 +321,10 @@ func (s *serviceTestSuite) TestUpdateGroceryItem_Err_InvalidMask() {
 func (s *serviceTestSuite) TestUpdateGroceryItem_Err_NotFound() {
 	gl := testhelper.FakeGroceryItem(testhelper.FakeGroceryListID())
 
-	s.querier.EXPECT().GetGroceryItem(s.ctx, gl.GetId()).Return(store.GroceryItem{}, sql.ErrNoRows)
+	s.querier.EXPECT().GetGroceryItem(s.ctx, store.GetGroceryItemParams{
+		ID:       gl.GetId(),
+		TenantID: s.tenantIDParam(),
+	}).Return(store.GroceryItem{}, sql.ErrNoRows)
 
 	response, err := s.s.UpdateGroceryItem(s.ctx, connect.NewRequest(&models.UpdateGroceryItemRequest{
 		GroceryItem: gl,
@@ -299,7 +342,10 @@ func (s *serviceTestSuite) TestListGroceryItems_Ok() {
 	gl1 := testhelper.FakeStoreGroceryItem(gli)
 	gl2 := testhelper.FakeStoreGroceryItem(gli)
 
-	s.querier.EXPECT().ListGroceryItemsByGroceryList(s.ctx, gli).Return([]store.GroceryItem{gl1, gl2}, nil)
+	s.querier.EXPECT().ListGroceryItemsByGroceryList(s.ctx, store.ListGroceryItemsByGroceryListParams{
+		GroceryListID: gli,
+		TenantID:      s.tenantIDParam(),
+	}).Return([]store.GroceryItem{gl1, gl2}, nil)
 
 	response, err := s.s.ListGroceryItems(s.ctx, connect.NewRequest(&models.ListGroceryItemsRequest{
 		GroceryList: gli,
@@ -312,6 +358,12 @@ func (s *serviceTestSuite) TestListGroceryItems_Ok() {
 func (s *serviceTestSuite) TestDeleteGroceryItem_Ok() {
 	id := testhelper.FakeGroceryItemID()
 
+	// First, verify the item exists
+	s.querier.EXPECT().GetGroceryItem(s.ctx, store.GetGroceryItemParams{
+		ID:       id,
+		TenantID: s.tenantIDParam(),
+	}).Return(testhelper.FakeStoreGroceryItem(testhelper.FakeGroceryListID()), nil)
+
 	s.querier.EXPECT().DeleteGroceryItem(s.ctx, id).Return(store.GroceryItem{}, nil)
 
 	_, err := s.s.DeleteGroceryItem(s.ctx, connect.NewRequest(&models.DeleteGroceryItemRequest{
@@ -322,7 +374,7 @@ func (s *serviceTestSuite) TestDeleteGroceryItem_Ok() {
 
 // Test that we get a NotFound error when the grocery item does not exist.
 func (s *serviceTestSuite) TestDeleteGroceryItem_Err_NotFound() {
-	s.querier.EXPECT().DeleteGroceryItem(s.ctx, mock.Anything).Return(store.GroceryItem{}, sql.ErrNoRows)
+	s.querier.EXPECT().GetGroceryItem(s.ctx, mock.Anything).Return(store.GroceryItem{}, sql.ErrNoRows)
 
 	_, err := s.s.DeleteGroceryItem(s.ctx, connect.NewRequest(&models.DeleteGroceryItemRequest{
 		Id: testhelper.FakeGroceryItemID(),

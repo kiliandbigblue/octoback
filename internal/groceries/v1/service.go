@@ -9,6 +9,7 @@ import (
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1"
 	store "github.com/kiliandbigblue/octoback/gen/store/v1"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
+	"github.com/kiliandbigblue/octoback/internal/x/tenant"
 )
 
 type Service struct {
@@ -21,12 +22,21 @@ func NewService(querier store.Querier) *Service {
 	}
 }
 
+// tenantIDFromContext extracts tenant_id from context and converts it to sql.NullInt64.
+func tenantIDFromContext(ctx context.Context) sql.NullInt64 {
+	id := tenant.MustTenantIDFromContext(ctx)
+	return sql.NullInt64{Int64: id, Valid: true}
+}
+
 // GetGroceryList returns a grocery list by its ID.
 func (s *Service) GetGroceryList(ctx context.Context, r *connect.Request[models.GetGroceryListRequest]) (*connect.Response[models.GetGroceryListResponse], error) {
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("GetGroceryList")
 
-	gli, err := s.querier.GetGroceryList(ctx, r.Msg.GetId())
+	gli, err := s.querier.GetGroceryList(ctx, store.GetGroceryListParams{
+		ID:       r.Msg.GetId(),
+		TenantID: tenantIDFromContext(ctx),
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
@@ -43,7 +53,10 @@ func (s *Service) CreateGroceryList(ctx context.Context, r *connect.Request[mode
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("CreateGroceryList")
 
-	gli, err := s.querier.CreateGroceryList(ctx, r.Msg.GetName())
+	gli, err := s.querier.CreateGroceryList(ctx, store.CreateGroceryListParams{
+		Name:     r.Msg.GetName(),
+		TenantID: tenantIDFromContext(ctx),
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid name"))
@@ -61,6 +74,8 @@ func (s *Service) UpdateGroceryList(ctx context.Context, r *connect.Request[mode
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("UpdateGroceryList")
 
+	tenantID := tenantIDFromContext(ctx)
+
 	fields := map[string]struct{}{}
 	for _, field := range r.Msg.GetUpdateMask().GetPaths() {
 		if field == "name" {
@@ -71,7 +86,10 @@ func (s *Service) UpdateGroceryList(ctx context.Context, r *connect.Request[mode
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid mask"))
 	}
 
-	gl, err := s.querier.GetGroceryList(ctx, r.Msg.GetGroceryList().GetId())
+	gl, err := s.querier.GetGroceryList(ctx, store.GetGroceryListParams{
+		ID:       r.Msg.GetGroceryList().GetId(),
+		TenantID: tenantID,
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
@@ -84,9 +102,10 @@ func (s *Service) UpdateGroceryList(ctx context.Context, r *connect.Request[mode
 	}
 
 	if _, err := s.querier.UpdateGroceryList(ctx, store.UpdateGroceryListParams{
-		ID:      gl.ID,
-		Name:    gl.Name,
-		Version: gl.Version,
+		ID:       gl.ID,
+		Name:     gl.Name,
+		TenantID: tenantID,
+		Version:  gl.Version,
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid name"))
@@ -106,7 +125,7 @@ func (s *Service) ListGroceryLists(ctx context.Context, _ *connect.Request[model
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("ListGroceryLists")
 
-	gls, err := s.querier.ListGroceryLists(ctx)
+	gls, err := s.querier.ListGroceryLists(ctx, tenantIDFromContext(ctx))
 	if err != nil {
 		panic(err)
 	}
@@ -128,7 +147,10 @@ func (s *Service) DeleteGroceryList(ctx context.Context, r *connect.Request[mode
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("DeleteGroceryList")
 
-	if _, err := s.querier.DeleteGroceryList(ctx, r.Msg.GetId()); err != nil {
+	if _, err := s.querier.DeleteGroceryList(ctx, store.DeleteGroceryListParams{
+		ID:       r.Msg.GetId(),
+		TenantID: tenantIDFromContext(ctx),
+	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
 		}
@@ -143,10 +165,13 @@ func (s *Service) GetGroceryItem(ctx context.Context, r *connect.Request[models.
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("GetGroceryItem")
 
-	git, err := s.querier.GetGroceryItem(ctx, r.Msg.GetId())
+	git, err := s.querier.GetGroceryItem(ctx, store.GetGroceryItemParams{
+		ID:       r.Msg.GetId(),
+		TenantID: tenantIDFromContext(ctx),
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery item not found"))
 		}
 		panic(err)
 	}
@@ -159,6 +184,17 @@ func (s *Service) GetGroceryItem(ctx context.Context, r *connect.Request[models.
 func (s *Service) CreateGroceryItem(ctx context.Context, r *connect.Request[models.CreateGroceryItemRequest]) (*connect.Response[models.CreateGroceryItemResponse], error) {
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("CreateGroceryItem")
+
+	// First verify the grocery list belongs to the tenant
+	if _, err := s.querier.GetGroceryList(ctx, store.GetGroceryListParams{
+		ID:       r.Msg.GetGroceryList(),
+		TenantID: tenantIDFromContext(ctx),
+	}); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
+		}
+		panic(err)
+	}
 
 	git, err := s.querier.CreateGroceryItem(ctx, store.CreateGroceryItemParams{
 		GroceryListID: r.Msg.GetGroceryList(),
@@ -183,6 +219,8 @@ func (s *Service) UpdateGroceryItem(ctx context.Context, r *connect.Request[mode
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("UpdateGroceryItem")
 
+	tenantID := tenantIDFromContext(ctx)
+
 	fields := map[string]struct{}{}
 	for _, field := range r.Msg.GetUpdateMask().GetPaths() {
 		switch field {
@@ -194,10 +232,13 @@ func (s *Service) UpdateGroceryItem(ctx context.Context, r *connect.Request[mode
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid mask"))
 	}
 
-	git, err := s.querier.GetGroceryItem(ctx, r.Msg.GetGroceryItem().GetId())
+	git, err := s.querier.GetGroceryItem(ctx, store.GetGroceryItemParams{
+		ID:       r.Msg.GetGroceryItem().GetId(),
+		TenantID: tenantID,
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery list not found"))
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery item not found"))
 		}
 		panic(err)
 	}
@@ -237,7 +278,10 @@ func (s *Service) ListGroceryItems(ctx context.Context, r *connect.Request[model
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("ListGroceryItems")
 
-	gitsi, err := s.querier.ListGroceryItemsByGroceryList(ctx, r.Msg.GetGroceryList())
+	gitsi, err := s.querier.ListGroceryItemsByGroceryList(ctx, store.ListGroceryItemsByGroceryListParams{
+		GroceryListID: r.Msg.GetGroceryList(),
+		TenantID:      tenantIDFromContext(ctx),
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -258,6 +302,17 @@ func (s *Service) ListGroceryItems(ctx context.Context, r *connect.Request[model
 func (s *Service) DeleteGroceryItem(ctx context.Context, r *connect.Request[models.DeleteGroceryItemRequest]) (*connect.Response[models.DeleteGroceryItemResponse], error) {
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("DeleteGroceryItem")
+
+	// First verify the grocery item belongs to the tenant
+	if _, err := s.querier.GetGroceryItem(ctx, store.GetGroceryItemParams{
+		ID:       r.Msg.GetId(),
+		TenantID: tenantIDFromContext(ctx),
+	}); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("grocery item not found"))
+		}
+		panic(err)
+	}
 
 	if _, err := s.querier.DeleteGroceryItem(ctx, r.Msg.GetId()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

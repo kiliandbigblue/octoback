@@ -20,6 +20,7 @@ import (
 	recipesv1 "github.com/kiliandbigblue/octoback/internal/recipes/v1"
 	"github.com/kiliandbigblue/octoback/internal/x/auth0"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
+	"github.com/kiliandbigblue/octoback/internal/x/tenant"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/net/http2"
@@ -93,8 +94,13 @@ func main() {
 	li := cloudzap.NewLoggerInterceptor(log)
 	ai := auth0.NewAuthInterceptor(auth0Validator)
 
-	// Interceptors are executed in order: auth first, then logging, then validation
-	interceptors := connect.WithInterceptors(ai, li, vi)
+	// Initialize tenant middleware
+	tenantResolver := tenant.NewDBResolver(querier)
+	tenantMiddleware := tenant.NewMiddleware(tenantResolver, tenant.Config{}, log)
+	ti := tenantMiddleware.NewTenantInterceptor()
+
+	// Interceptors are executed in order: auth first, then tenant resolution, then logging, then validation
+	interceptors := connect.WithInterceptors(ai, ti, li, vi)
 
 	mux := http.NewServeMux()
 	groceriesPath, groceriesHandler := groceriesv1connect.NewServiceHandler(groceriesSvc, interceptors)

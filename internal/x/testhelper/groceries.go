@@ -2,6 +2,7 @@ package testhelper
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"math/big"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 	"github.com/segmentio/ksuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func FakeTenantID() int64 {
+	return ksuid.New().Time().Unix()
+}
 
 func FakeGroceryListID() int64 {
 	return ksuid.New().Time().Unix()
@@ -26,11 +31,16 @@ func FakeGroceryList() *models.GroceryList {
 }
 
 func FakeStoreGroceryList() store.GroceryList {
+	return FakeStoreGroceryListWithTenant(FakeTenantID())
+}
+
+func FakeStoreGroceryListWithTenant(tenantID int64) store.GroceryList {
 	return store.GroceryList{
 		ID:        FakeGroceryListID(),
 		Name:      fake.Characters(),
 		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
 		Version:   1,
+		TenantID:  sql.NullInt64{Int64: tenantID, Valid: true},
 	}
 }
 

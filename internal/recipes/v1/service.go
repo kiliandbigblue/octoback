@@ -9,6 +9,7 @@ import (
 	models "github.com/kiliandbigblue/octoback/gen/proto/go/octoback/recipes/v1"
 	store "github.com/kiliandbigblue/octoback/gen/store/v1"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
+	"github.com/kiliandbigblue/octoback/internal/x/tenant"
 )
 
 type Service struct {
@@ -21,12 +22,21 @@ func NewService(querier store.Querier) *Service {
 	}
 }
 
+// tenantIDFromContext extracts tenant_id from context and converts it to sql.NullInt64.
+func tenantIDFromContext(ctx context.Context) sql.NullInt64 {
+	id := tenant.MustTenantIDFromContext(ctx)
+	return sql.NullInt64{Int64: id, Valid: true}
+}
+
 // GetRecipe returns a recipe by its ID.
 func (s *Service) GetRecipe(ctx context.Context, r *connect.Request[models.GetRecipeRequest]) (*connect.Response[models.GetRecipeResponse], error) {
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("GetRecipe")
 
-	recipe, err := s.querier.GetRecipe(ctx, r.Msg.GetId())
+	recipe, err := s.querier.GetRecipe(ctx, store.GetRecipeParams{
+		ID:       r.Msg.GetId(),
+		TenantID: tenantIDFromContext(ctx),
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -49,6 +59,7 @@ func (s *Service) CreateRecipe(ctx context.Context, r *connect.Request[models.Cr
 		Servings:        int64(r.Msg.GetServings()),
 		PrepTimeMinutes: int64(r.Msg.GetPrepTimeMinutes()),
 		CookTimeMinutes: int64(r.Msg.GetCookTimeMinutes()),
+		TenantID:        tenantIDFromContext(ctx),
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -67,6 +78,8 @@ func (s *Service) UpdateRecipe(ctx context.Context, r *connect.Request[models.Up
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("UpdateRecipe")
 
+	tenantID := tenantIDFromContext(ctx)
+
 	fields := map[string]struct{}{}
 	for _, field := range r.Msg.GetUpdateMask().GetPaths() {
 		switch field {
@@ -78,7 +91,10 @@ func (s *Service) UpdateRecipe(ctx context.Context, r *connect.Request[models.Up
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid mask"))
 	}
 
-	recipe, err := s.querier.GetRecipe(ctx, r.Msg.GetRecipe().GetId())
+	recipe, err := s.querier.GetRecipe(ctx, store.GetRecipeParams{
+		ID:       r.Msg.GetRecipe().GetId(),
+		TenantID: tenantID,
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
@@ -109,6 +125,7 @@ func (s *Service) UpdateRecipe(ctx context.Context, r *connect.Request[models.Up
 		Servings:        recipe.Servings,
 		PrepTimeMinutes: recipe.PrepTimeMinutes,
 		CookTimeMinutes: recipe.CookTimeMinutes,
+		TenantID:        tenantID,
 		Version:         recipe.Version,
 	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -129,7 +146,7 @@ func (s *Service) ListRecipes(ctx context.Context, _ *connect.Request[models.Lis
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("ListRecipes")
 
-	recipes, err := s.querier.ListRecipes(ctx)
+	recipes, err := s.querier.ListRecipes(ctx, tenantIDFromContext(ctx))
 	if err != nil {
 		panic(err)
 	}
@@ -151,7 +168,10 @@ func (s *Service) DeleteRecipe(ctx context.Context, r *connect.Request[models.De
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("DeleteRecipe")
 
-	if _, err := s.querier.DeleteRecipe(ctx, r.Msg.GetId()); err != nil {
+	if _, err := s.querier.DeleteRecipe(ctx, store.DeleteRecipeParams{
+		ID:       r.Msg.GetId(),
+		TenantID: tenantIDFromContext(ctx),
+	}); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
 		}
@@ -166,7 +186,10 @@ func (s *Service) GetRecipeIngredient(ctx context.Context, r *connect.Request[mo
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("GetRecipeIngredient")
 
-	ingredient, err := s.querier.GetRecipeIngredient(ctx, r.Msg.GetId())
+	ingredient, err := s.querier.GetRecipeIngredient(ctx, store.GetRecipeIngredientParams{
+		ID:       r.Msg.GetId(),
+		TenantID: tenantIDFromContext(ctx),
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe ingredient not found"))
@@ -182,6 +205,17 @@ func (s *Service) GetRecipeIngredient(ctx context.Context, r *connect.Request[mo
 func (s *Service) CreateRecipeIngredient(ctx context.Context, r *connect.Request[models.CreateRecipeIngredientRequest]) (*connect.Response[models.CreateRecipeIngredientResponse], error) {
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("CreateRecipeIngredient")
+
+	// First verify the recipe belongs to the tenant
+	if _, err := s.querier.GetRecipe(ctx, store.GetRecipeParams{
+		ID:       r.Msg.GetRecipe(),
+		TenantID: tenantIDFromContext(ctx),
+	}); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe not found"))
+		}
+		panic(err)
+	}
 
 	ingredient, err := s.querier.CreateRecipeIngredient(ctx, store.CreateRecipeIngredientParams{
 		RecipeID: r.Msg.GetRecipe(),
@@ -206,6 +240,8 @@ func (s *Service) UpdateRecipeIngredient(ctx context.Context, r *connect.Request
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("UpdateRecipeIngredient")
 
+	tenantID := tenantIDFromContext(ctx)
+
 	fields := map[string]struct{}{}
 	for _, field := range r.Msg.GetUpdateMask().GetPaths() {
 		switch field {
@@ -217,7 +253,10 @@ func (s *Service) UpdateRecipeIngredient(ctx context.Context, r *connect.Request
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid mask"))
 	}
 
-	ingredient, err := s.querier.GetRecipeIngredient(ctx, r.Msg.GetRecipeIngredient().GetId())
+	ingredient, err := s.querier.GetRecipeIngredient(ctx, store.GetRecipeIngredientParams{
+		ID:       r.Msg.GetRecipeIngredient().GetId(),
+		TenantID: tenantID,
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe ingredient not found"))
@@ -260,7 +299,10 @@ func (s *Service) ListRecipeIngredients(ctx context.Context, r *connect.Request[
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("ListRecipeIngredients")
 
-	ingredients, err := s.querier.ListRecipeIngredientsByRecipe(ctx, r.Msg.GetRecipe())
+	ingredients, err := s.querier.ListRecipeIngredientsByRecipe(ctx, store.ListRecipeIngredientsByRecipeParams{
+		RecipeID: r.Msg.GetRecipe(),
+		TenantID: tenantIDFromContext(ctx),
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -282,6 +324,17 @@ func (s *Service) DeleteRecipeIngredient(ctx context.Context, r *connect.Request
 	log, _ := cloudzap.GetLogger(ctx)
 	log.Info("DeleteRecipeIngredient")
 
+	// First verify the ingredient belongs to the tenant
+	if _, err := s.querier.GetRecipeIngredient(ctx, store.GetRecipeIngredientParams{
+		ID:       r.Msg.GetId(),
+		TenantID: tenantIDFromContext(ctx),
+	}); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe ingredient not found"))
+		}
+		panic(err)
+	}
+
 	if _, err := s.querier.DeleteRecipeIngredient(ctx, r.Msg.GetId()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("recipe ingredient not found"))
@@ -291,4 +344,3 @@ func (s *Service) DeleteRecipeIngredient(ctx context.Context, r *connect.Request
 
 	return connect.NewResponse(&models.DeleteRecipeIngredientResponse{}), nil
 }
-

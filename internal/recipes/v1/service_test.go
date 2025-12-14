@@ -12,6 +12,7 @@ import (
 	store "github.com/kiliandbigblue/octoback/gen/store/v1"
 	"github.com/kiliandbigblue/octoback/internal/recipes/v1/mocks"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
+	"github.com/kiliandbigblue/octoback/internal/x/tenant"
 	"github.com/kiliandbigblue/octoback/internal/x/testhelper"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -22,10 +23,11 @@ import (
 
 type serviceTestSuite struct {
 	suite.Suite
-	log     *zap.Logger
-	ctx     context.Context
-	s       *Service
-	querier *mocks.Querier
+	log      *zap.Logger
+	ctx      context.Context
+	tenantID int64
+	s        *Service
+	querier  *mocks.Querier
 }
 
 func TestServiceTestSuite(t *testing.T) {
@@ -34,16 +36,26 @@ func TestServiceTestSuite(t *testing.T) {
 
 func (s *serviceTestSuite) SetupTest() {
 	s.log = zap.NewNop()
+	s.tenantID = testhelper.FakeTenantID()
 	s.ctx = cloudzap.WithLogger(context.Background(), s.log)
+	s.ctx = tenant.WithTenantID(s.ctx, s.tenantID)
 	s.querier = mocks.NewQuerier(s.T())
 	s.s = NewService(s.querier)
 }
 
+// Helper to create a NullInt64 from the test suite's tenant ID
+func (s *serviceTestSuite) tenantIDParam() sql.NullInt64 {
+	return sql.NullInt64{Int64: s.tenantID, Valid: true}
+}
+
 // Test that we can retrieve a recipe by its ID.
 func (s *serviceTestSuite) TestGetRecipe_OK() {
-	recipe := testhelper.FakeStoreRecipe()
+	recipe := testhelper.FakeStoreRecipeWithTenant(s.tenantID)
 
-	s.querier.EXPECT().GetRecipe(s.ctx, recipe.ID).Return(recipe, nil)
+	s.querier.EXPECT().GetRecipe(s.ctx, store.GetRecipeParams{
+		ID:       recipe.ID,
+		TenantID: s.tenantIDParam(),
+	}).Return(recipe, nil)
 
 	response, err := s.s.GetRecipe(s.ctx, connect.NewRequest(&models.GetRecipeRequest{
 		Id: recipe.ID,
@@ -78,6 +90,7 @@ func (s *serviceTestSuite) TestCreateRecipe_Ok() {
 		Servings:        int64(servings),
 		PrepTimeMinutes: int64(prepTime),
 		CookTimeMinutes: int64(cookTime),
+		TenantID:        s.tenantIDParam(),
 	}).Return(store.Recipe{
 		ID:              testhelper.FakeRecipeID(),
 		Name:            name,
@@ -87,6 +100,7 @@ func (s *serviceTestSuite) TestCreateRecipe_Ok() {
 		CookTimeMinutes: int64(cookTime),
 		CreatedAt:       time.Now().Format("2006-01-02 15:04:05"),
 		Version:         1,
+		TenantID:        s.tenantIDParam(),
 	}, nil)
 
 	response, err := s.s.CreateRecipe(s.ctx, connect.NewRequest(&models.CreateRecipeRequest{
@@ -116,14 +130,17 @@ func (s *serviceTestSuite) TestCreateRecipe_Err() {
 
 // Test that we can update a recipe.
 func (s *serviceTestSuite) TestUpdateRecipe_Ok() {
-	actual := testhelper.FakeStoreRecipe()
+	actual := testhelper.FakeStoreRecipeWithTenant(s.tenantID)
 
 	input := actual
 	input.Name = fake.Characters()
 	input.Description = fake.Sentences()
 	input.Servings = actual.Servings + 2
 
-	s.querier.EXPECT().GetRecipe(s.ctx, actual.ID).Return(actual, nil)
+	s.querier.EXPECT().GetRecipe(s.ctx, store.GetRecipeParams{
+		ID:       actual.ID,
+		TenantID: s.tenantIDParam(),
+	}).Return(actual, nil)
 
 	s.querier.EXPECT().UpdateRecipe(s.ctx, store.UpdateRecipeParams{
 		ID:              input.ID,
@@ -132,6 +149,7 @@ func (s *serviceTestSuite) TestUpdateRecipe_Ok() {
 		Servings:        input.Servings,
 		PrepTimeMinutes: input.PrepTimeMinutes,
 		CookTimeMinutes: input.CookTimeMinutes,
+		TenantID:        s.tenantIDParam(),
 		Version:         input.Version,
 	}).Return(input, nil)
 
@@ -159,7 +177,10 @@ func (s *serviceTestSuite) TestUpdateRecipe_Err_InvalidMask() {
 func (s *serviceTestSuite) TestUpdateRecipe_Err_NotFound() {
 	recipe := testhelper.FakeRecipe()
 
-	s.querier.EXPECT().GetRecipe(s.ctx, recipe.GetId()).Return(store.Recipe{}, sql.ErrNoRows)
+	s.querier.EXPECT().GetRecipe(s.ctx, store.GetRecipeParams{
+		ID:       recipe.GetId(),
+		TenantID: s.tenantIDParam(),
+	}).Return(store.Recipe{}, sql.ErrNoRows)
 
 	response, err := s.s.UpdateRecipe(s.ctx, connect.NewRequest(&models.UpdateRecipeRequest{
 		Recipe:     recipe,
@@ -172,10 +193,10 @@ func (s *serviceTestSuite) TestUpdateRecipe_Err_NotFound() {
 
 // Test that we can list all recipes.
 func (s *serviceTestSuite) TestListRecipes_Ok() {
-	r1 := testhelper.FakeStoreRecipe()
-	r2 := testhelper.FakeStoreRecipe()
+	r1 := testhelper.FakeStoreRecipeWithTenant(s.tenantID)
+	r2 := testhelper.FakeStoreRecipeWithTenant(s.tenantID)
 
-	s.querier.EXPECT().ListRecipes(s.ctx).Return([]store.Recipe{r1, r2}, nil)
+	s.querier.EXPECT().ListRecipes(s.ctx, s.tenantIDParam()).Return([]store.Recipe{r1, r2}, nil)
 
 	response, err := s.s.ListRecipes(s.ctx, connect.NewRequest(&models.ListRecipesRequest{}))
 	s.NoError(err)
@@ -186,7 +207,10 @@ func (s *serviceTestSuite) TestListRecipes_Ok() {
 func (s *serviceTestSuite) TestDeleteRecipe_Ok() {
 	id := testhelper.FakeRecipeID()
 
-	s.querier.EXPECT().DeleteRecipe(s.ctx, id).Return(store.Recipe{}, nil)
+	s.querier.EXPECT().DeleteRecipe(s.ctx, store.DeleteRecipeParams{
+		ID:       id,
+		TenantID: s.tenantIDParam(),
+	}).Return(store.Recipe{}, nil)
 
 	_, err := s.s.DeleteRecipe(s.ctx, connect.NewRequest(&models.DeleteRecipeRequest{
 		Id: id,
@@ -209,7 +233,10 @@ func (s *serviceTestSuite) TestDeleteRecipe_Err_NotFound() {
 func (s *serviceTestSuite) TestGetRecipeIngredient_OK() {
 	ingredient := testhelper.FakeStoreRecipeIngredient(testhelper.FakeRecipeID())
 
-	s.querier.EXPECT().GetRecipeIngredient(s.ctx, ingredient.ID).Return(ingredient, nil)
+	s.querier.EXPECT().GetRecipeIngredient(s.ctx, store.GetRecipeIngredientParams{
+		ID:       ingredient.ID,
+		TenantID: s.tenantIDParam(),
+	}).Return(ingredient, nil)
 
 	response, err := s.s.GetRecipeIngredient(s.ctx, connect.NewRequest(&models.GetRecipeIngredientRequest{
 		Id: ingredient.ID,
@@ -235,6 +262,12 @@ func (s *serviceTestSuite) TestCreateRecipeIngredient_Ok() {
 	recipeID := testhelper.FakeRecipeID()
 	ingredient := testhelper.FakeStoreRecipeIngredient(recipeID)
 
+	// First, verify the recipe exists
+	s.querier.EXPECT().GetRecipe(s.ctx, store.GetRecipeParams{
+		ID:       recipeID,
+		TenantID: s.tenantIDParam(),
+	}).Return(testhelper.FakeStoreRecipeWithTenant(s.tenantID), nil)
+
 	s.querier.EXPECT().CreateRecipeIngredient(s.ctx, store.CreateRecipeIngredientParams{
 		RecipeID: recipeID,
 		Name:     ingredient.Name,
@@ -252,15 +285,17 @@ func (s *serviceTestSuite) TestCreateRecipeIngredient_Ok() {
 	s.NotEmpty(response.Msg.GetRecipeIngredient().GetId())
 }
 
-// Test that we can't create a recipe ingredient with invalid data.
-func (s *serviceTestSuite) TestCreateRecipeIngredient_Err() {
-	s.querier.EXPECT().CreateRecipeIngredient(s.ctx, mock.Anything).Return(store.RecipeIngredient{}, sql.ErrNoRows)
+// Test that we can't create a recipe ingredient when the recipe doesn't exist.
+func (s *serviceTestSuite) TestCreateRecipeIngredient_Err_RecipeNotFound() {
+	s.querier.EXPECT().GetRecipe(s.ctx, mock.Anything).Return(store.Recipe{}, sql.ErrNoRows)
 
 	response, err := s.s.CreateRecipeIngredient(s.ctx, connect.NewRequest(&models.CreateRecipeIngredientRequest{
-		Name: "",
+		Recipe: testhelper.FakeRecipeID(),
+		Name:   "Test Ingredient",
 	}))
 	s.Error(err)
 	s.Nil(response)
+	s.Equal(connect.CodeNotFound, connect.CodeOf(err))
 }
 
 // Test that we can update a recipe ingredient.
@@ -273,7 +308,10 @@ func (s *serviceTestSuite) TestUpdateRecipeIngredient_Ok() {
 	input.Quantity = "500"
 	input.Unit = "ml"
 
-	s.querier.EXPECT().GetRecipeIngredient(s.ctx, actual.ID).Return(actual, nil)
+	s.querier.EXPECT().GetRecipeIngredient(s.ctx, store.GetRecipeIngredientParams{
+		ID:       actual.ID,
+		TenantID: s.tenantIDParam(),
+	}).Return(actual, nil)
 
 	s.querier.EXPECT().UpdateRecipeIngredient(s.ctx, store.UpdateRecipeIngredientParams{
 		ID:       actual.ID,
@@ -307,7 +345,10 @@ func (s *serviceTestSuite) TestUpdateRecipeIngredient_Err_InvalidMask() {
 func (s *serviceTestSuite) TestUpdateRecipeIngredient_Err_NotFound() {
 	ingredient := testhelper.FakeRecipeIngredient(testhelper.FakeRecipeID())
 
-	s.querier.EXPECT().GetRecipeIngredient(s.ctx, ingredient.GetId()).Return(store.RecipeIngredient{}, sql.ErrNoRows)
+	s.querier.EXPECT().GetRecipeIngredient(s.ctx, store.GetRecipeIngredientParams{
+		ID:       ingredient.GetId(),
+		TenantID: s.tenantIDParam(),
+	}).Return(store.RecipeIngredient{}, sql.ErrNoRows)
 
 	response, err := s.s.UpdateRecipeIngredient(s.ctx, connect.NewRequest(&models.UpdateRecipeIngredientRequest{
 		RecipeIngredient: ingredient,
@@ -325,7 +366,10 @@ func (s *serviceTestSuite) TestListRecipeIngredients_Ok() {
 	i1 := testhelper.FakeStoreRecipeIngredient(recipeID)
 	i2 := testhelper.FakeStoreRecipeIngredient(recipeID)
 
-	s.querier.EXPECT().ListRecipeIngredientsByRecipe(s.ctx, recipeID).Return([]store.RecipeIngredient{i1, i2}, nil)
+	s.querier.EXPECT().ListRecipeIngredientsByRecipe(s.ctx, store.ListRecipeIngredientsByRecipeParams{
+		RecipeID: recipeID,
+		TenantID: s.tenantIDParam(),
+	}).Return([]store.RecipeIngredient{i1, i2}, nil)
 
 	response, err := s.s.ListRecipeIngredients(s.ctx, connect.NewRequest(&models.ListRecipeIngredientsRequest{
 		Recipe: recipeID,
@@ -338,6 +382,12 @@ func (s *serviceTestSuite) TestListRecipeIngredients_Ok() {
 func (s *serviceTestSuite) TestDeleteRecipeIngredient_Ok() {
 	id := testhelper.FakeRecipeIngredientID()
 
+	// First, verify the ingredient exists
+	s.querier.EXPECT().GetRecipeIngredient(s.ctx, store.GetRecipeIngredientParams{
+		ID:       id,
+		TenantID: s.tenantIDParam(),
+	}).Return(testhelper.FakeStoreRecipeIngredient(testhelper.FakeRecipeID()), nil)
+
 	s.querier.EXPECT().DeleteRecipeIngredient(s.ctx, id).Return(store.RecipeIngredient{}, nil)
 
 	_, err := s.s.DeleteRecipeIngredient(s.ctx, connect.NewRequest(&models.DeleteRecipeIngredientRequest{
@@ -348,7 +398,7 @@ func (s *serviceTestSuite) TestDeleteRecipeIngredient_Ok() {
 
 // Test that we get a NotFound error when the recipe ingredient does not exist.
 func (s *serviceTestSuite) TestDeleteRecipeIngredient_Err_NotFound() {
-	s.querier.EXPECT().DeleteRecipeIngredient(s.ctx, mock.Anything).Return(store.RecipeIngredient{}, sql.ErrNoRows)
+	s.querier.EXPECT().GetRecipeIngredient(s.ctx, mock.Anything).Return(store.RecipeIngredient{}, sql.ErrNoRows)
 
 	_, err := s.s.DeleteRecipeIngredient(s.ctx, connect.NewRequest(&models.DeleteRecipeIngredientRequest{
 		Id: testhelper.FakeRecipeIngredientID(),
@@ -356,4 +406,3 @@ func (s *serviceTestSuite) TestDeleteRecipeIngredient_Err_NotFound() {
 	s.Error(err)
 	s.Equal(connect.CodeNotFound, connect.CodeOf(err))
 }
-
