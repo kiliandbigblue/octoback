@@ -14,8 +14,10 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
 	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1/groceriesv1connect"
+	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/recipes/v1/recipesv1connect"
 	store "github.com/kiliandbigblue/octoback/gen/store/v1"
-	v1 "github.com/kiliandbigblue/octoback/internal/groceries/v1"
+	groceriesv1 "github.com/kiliandbigblue/octoback/internal/groceries/v1"
+	recipesv1 "github.com/kiliandbigblue/octoback/internal/recipes/v1"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -56,7 +58,9 @@ func main() {
 	}()
 	log.Info("database connection established", zap.String("path", cfg.dbPath))
 
-	cs := v1.NewService(store.New(db))
+	querier := store.New(db)
+	groceriesSvc := groceriesv1.NewService(querier)
+	recipesSvc := recipesv1.NewService(querier)
 
 	vi, err := validate.NewInterceptor()
 	if err != nil {
@@ -66,8 +70,10 @@ func main() {
 	li := cloudzap.NewLoggerInterceptor(log)
 
 	mux := http.NewServeMux()
-	path, handler := groceriesv1connect.NewServiceHandler(cs, connect.WithInterceptors(vi, li))
-	mux.Handle(path, handler)
+	groceriesPath, groceriesHandler := groceriesv1connect.NewServiceHandler(groceriesSvc, connect.WithInterceptors(vi, li))
+	mux.Handle(groceriesPath, groceriesHandler)
+	recipesPath, recipesHandler := recipesv1connect.NewServiceHandler(recipesSvc, connect.WithInterceptors(vi, li))
+	mux.Handle(recipesPath, recipesHandler)
 
 	log.Info("starting server", zap.String("port", cfg.port))
 

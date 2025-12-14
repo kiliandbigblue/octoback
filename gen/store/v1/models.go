@@ -20,3 +20,24 @@ type GroceryList struct {
 	CreatedAt string
 	Version   int64
 }
+
+type Recipe struct {
+	ID              int64
+	Name            string
+	Description     string
+	Servings        int64
+	PrepTimeMinutes int64
+	CookTimeMinutes int64
+	CreatedAt       string
+	Version         int64
+}
+
+type RecipeIngredient struct {
+	ID        int64
+	RecipeID  int64
+	Name      string
+	Quantity  string
+	Unit      string
+	CreatedAt string
+	Version   int64
+}
