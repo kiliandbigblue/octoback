@@ -136,6 +136,120 @@ func (_c *Querier_CreateGroceryList_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
+// CreateRecipe provides a mock function with given fields: ctx, arg
+func (_m *Querier) CreateRecipe(ctx context.Context, arg v1.CreateRecipeParams) (v1.Recipe, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateRecipe")
+	}
+
+	var r0 v1.Recipe
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, v1.CreateRecipeParams) (v1.Recipe, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, v1.CreateRecipeParams) v1.Recipe); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(v1.Recipe)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, v1.CreateRecipeParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_CreateRecipe_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateRecipe'
+type Querier_CreateRecipe_Call struct {
+	*mock.Call
+}
+
+// CreateRecipe is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg v1.CreateRecipeParams
+func (_e *Querier_Expecter) CreateRecipe(ctx interface{}, arg interface{}) *Querier_CreateRecipe_Call {
+	return &Querier_CreateRecipe_Call{Call: _e.mock.On("CreateRecipe", ctx, arg)}
+}
+
+func (_c *Querier_CreateRecipe_Call) Run(run func(ctx context.Context, arg v1.CreateRecipeParams)) *Querier_CreateRecipe_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(v1.CreateRecipeParams))
+	})
+	return _c
+}
+
+func (_c *Querier_CreateRecipe_Call) Return(_a0 v1.Recipe, _a1 error) *Querier_CreateRecipe_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_CreateRecipe_Call) RunAndReturn(run func(context.Context, v1.CreateRecipeParams) (v1.Recipe, error)) *Querier_CreateRecipe_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateRecipeIngredient provides a mock function with given fields: ctx, arg
+func (_m *Querier) CreateRecipeIngredient(ctx context.Context, arg v1.CreateRecipeIngredientParams) (v1.RecipeIngredient, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateRecipeIngredient")
+	}
+
+	var r0 v1.RecipeIngredient
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, v1.CreateRecipeIngredientParams) (v1.RecipeIngredient, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, v1.CreateRecipeIngredientParams) v1.RecipeIngredient); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(v1.RecipeIngredient)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, v1.CreateRecipeIngredientParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_CreateRecipeIngredient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateRecipeIngredient'
+type Querier_CreateRecipeIngredient_Call struct {
+	*mock.Call
+}
+
+// CreateRecipeIngredient is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg v1.CreateRecipeIngredientParams
+func (_e *Querier_Expecter) CreateRecipeIngredient(ctx interface{}, arg interface{}) *Querier_CreateRecipeIngredient_Call {
+	return &Querier_CreateRecipeIngredient_Call{Call: _e.mock.On("CreateRecipeIngredient", ctx, arg)}
+}
+
+func (_c *Querier_CreateRecipeIngredient_Call) Run(run func(ctx context.Context, arg v1.CreateRecipeIngredientParams)) *Querier_CreateRecipeIngredient_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(v1.CreateRecipeIngredientParams))
+	})
+	return _c
+}
+
+func (_c *Querier_CreateRecipeIngredient_Call) Return(_a0 v1.RecipeIngredient, _a1 error) *Querier_CreateRecipeIngredient_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_CreateRecipeIngredient_Call) RunAndReturn(run func(context.Context, v1.CreateRecipeIngredientParams) (v1.RecipeIngredient, error)) *Querier_CreateRecipeIngredient_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteGroceryItem provides a mock function with given fields: ctx, id
 func (_m *Querier) DeleteGroceryItem(ctx context.Context, id int64) (v1.GroceryItem, error) {
 	ret := _m.Called(ctx, id)
@@ -250,6 +364,120 @@ func (_c *Querier_DeleteGroceryList_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
+// DeleteRecipe provides a mock function with given fields: ctx, id
+func (_m *Querier) DeleteRecipe(ctx context.Context, id int64) (v1.Recipe, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteRecipe")
+	}
+
+	var r0 v1.Recipe
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (v1.Recipe, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) v1.Recipe); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(v1.Recipe)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_DeleteRecipe_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteRecipe'
+type Querier_DeleteRecipe_Call struct {
+	*mock.Call
+}
+
+// DeleteRecipe is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *Querier_Expecter) DeleteRecipe(ctx interface{}, id interface{}) *Querier_DeleteRecipe_Call {
+	return &Querier_DeleteRecipe_Call{Call: _e.mock.On("DeleteRecipe", ctx, id)}
+}
+
+func (_c *Querier_DeleteRecipe_Call) Run(run func(ctx context.Context, id int64)) *Querier_DeleteRecipe_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64))
+	})
+	return _c
+}
+
+func (_c *Querier_DeleteRecipe_Call) Return(_a0 v1.Recipe, _a1 error) *Querier_DeleteRecipe_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_DeleteRecipe_Call) RunAndReturn(run func(context.Context, int64) (v1.Recipe, error)) *Querier_DeleteRecipe_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteRecipeIngredient provides a mock function with given fields: ctx, id
+func (_m *Querier) DeleteRecipeIngredient(ctx context.Context, id int64) (v1.RecipeIngredient, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteRecipeIngredient")
+	}
+
+	var r0 v1.RecipeIngredient
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (v1.RecipeIngredient, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) v1.RecipeIngredient); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(v1.RecipeIngredient)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_DeleteRecipeIngredient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteRecipeIngredient'
+type Querier_DeleteRecipeIngredient_Call struct {
+	*mock.Call
+}
+
+// DeleteRecipeIngredient is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *Querier_Expecter) DeleteRecipeIngredient(ctx interface{}, id interface{}) *Querier_DeleteRecipeIngredient_Call {
+	return &Querier_DeleteRecipeIngredient_Call{Call: _e.mock.On("DeleteRecipeIngredient", ctx, id)}
+}
+
+func (_c *Querier_DeleteRecipeIngredient_Call) Run(run func(ctx context.Context, id int64)) *Querier_DeleteRecipeIngredient_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64))
+	})
+	return _c
+}
+
+func (_c *Querier_DeleteRecipeIngredient_Call) Return(_a0 v1.RecipeIngredient, _a1 error) *Querier_DeleteRecipeIngredient_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_DeleteRecipeIngredient_Call) RunAndReturn(run func(context.Context, int64) (v1.RecipeIngredient, error)) *Querier_DeleteRecipeIngredient_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetGroceryItem provides a mock function with given fields: ctx, id
 func (_m *Querier) GetGroceryItem(ctx context.Context, id int64) (v1.GroceryItem, error) {
 	ret := _m.Called(ctx, id)
@@ -360,6 +588,120 @@ func (_c *Querier_GetGroceryList_Call) Return(_a0 v1.GroceryList, _a1 error) *Qu
 }
 
 func (_c *Querier_GetGroceryList_Call) RunAndReturn(run func(context.Context, int64) (v1.GroceryList, error)) *Querier_GetGroceryList_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetRecipe provides a mock function with given fields: ctx, id
+func (_m *Querier) GetRecipe(ctx context.Context, id int64) (v1.Recipe, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRecipe")
+	}
+
+	var r0 v1.Recipe
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (v1.Recipe, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) v1.Recipe); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(v1.Recipe)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_GetRecipe_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetRecipe'
+type Querier_GetRecipe_Call struct {
+	*mock.Call
+}
+
+// GetRecipe is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *Querier_Expecter) GetRecipe(ctx interface{}, id interface{}) *Querier_GetRecipe_Call {
+	return &Querier_GetRecipe_Call{Call: _e.mock.On("GetRecipe", ctx, id)}
+}
+
+func (_c *Querier_GetRecipe_Call) Run(run func(ctx context.Context, id int64)) *Querier_GetRecipe_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64))
+	})
+	return _c
+}
+
+func (_c *Querier_GetRecipe_Call) Return(_a0 v1.Recipe, _a1 error) *Querier_GetRecipe_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_GetRecipe_Call) RunAndReturn(run func(context.Context, int64) (v1.Recipe, error)) *Querier_GetRecipe_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetRecipeIngredient provides a mock function with given fields: ctx, id
+func (_m *Querier) GetRecipeIngredient(ctx context.Context, id int64) (v1.RecipeIngredient, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRecipeIngredient")
+	}
+
+	var r0 v1.RecipeIngredient
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (v1.RecipeIngredient, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) v1.RecipeIngredient); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(v1.RecipeIngredient)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_GetRecipeIngredient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetRecipeIngredient'
+type Querier_GetRecipeIngredient_Call struct {
+	*mock.Call
+}
+
+// GetRecipeIngredient is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *Querier_Expecter) GetRecipeIngredient(ctx interface{}, id interface{}) *Querier_GetRecipeIngredient_Call {
+	return &Querier_GetRecipeIngredient_Call{Call: _e.mock.On("GetRecipeIngredient", ctx, id)}
+}
+
+func (_c *Querier_GetRecipeIngredient_Call) Run(run func(ctx context.Context, id int64)) *Querier_GetRecipeIngredient_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64))
+	})
+	return _c
+}
+
+func (_c *Querier_GetRecipeIngredient_Call) Return(_a0 v1.RecipeIngredient, _a1 error) *Querier_GetRecipeIngredient_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_GetRecipeIngredient_Call) RunAndReturn(run func(context.Context, int64) (v1.RecipeIngredient, error)) *Querier_GetRecipeIngredient_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -481,6 +823,123 @@ func (_c *Querier_ListGroceryLists_Call) RunAndReturn(run func(context.Context) 
 	return _c
 }
 
+// ListRecipeIngredientsByRecipe provides a mock function with given fields: ctx, recipeID
+func (_m *Querier) ListRecipeIngredientsByRecipe(ctx context.Context, recipeID int64) ([]v1.RecipeIngredient, error) {
+	ret := _m.Called(ctx, recipeID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListRecipeIngredientsByRecipe")
+	}
+
+	var r0 []v1.RecipeIngredient
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) ([]v1.RecipeIngredient, error)); ok {
+		return rf(ctx, recipeID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) []v1.RecipeIngredient); ok {
+		r0 = rf(ctx, recipeID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]v1.RecipeIngredient)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, recipeID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_ListRecipeIngredientsByRecipe_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListRecipeIngredientsByRecipe'
+type Querier_ListRecipeIngredientsByRecipe_Call struct {
+	*mock.Call
+}
+
+// ListRecipeIngredientsByRecipe is a helper method to define mock.On call
+//   - ctx context.Context
+//   - recipeID int64
+func (_e *Querier_Expecter) ListRecipeIngredientsByRecipe(ctx interface{}, recipeID interface{}) *Querier_ListRecipeIngredientsByRecipe_Call {
+	return &Querier_ListRecipeIngredientsByRecipe_Call{Call: _e.mock.On("ListRecipeIngredientsByRecipe", ctx, recipeID)}
+}
+
+func (_c *Querier_ListRecipeIngredientsByRecipe_Call) Run(run func(ctx context.Context, recipeID int64)) *Querier_ListRecipeIngredientsByRecipe_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64))
+	})
+	return _c
+}
+
+func (_c *Querier_ListRecipeIngredientsByRecipe_Call) Return(_a0 []v1.RecipeIngredient, _a1 error) *Querier_ListRecipeIngredientsByRecipe_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_ListRecipeIngredientsByRecipe_Call) RunAndReturn(run func(context.Context, int64) ([]v1.RecipeIngredient, error)) *Querier_ListRecipeIngredientsByRecipe_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListRecipes provides a mock function with given fields: ctx
+func (_m *Querier) ListRecipes(ctx context.Context) ([]v1.Recipe, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListRecipes")
+	}
+
+	var r0 []v1.Recipe
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]v1.Recipe, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []v1.Recipe); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]v1.Recipe)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_ListRecipes_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListRecipes'
+type Querier_ListRecipes_Call struct {
+	*mock.Call
+}
+
+// ListRecipes is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *Querier_Expecter) ListRecipes(ctx interface{}) *Querier_ListRecipes_Call {
+	return &Querier_ListRecipes_Call{Call: _e.mock.On("ListRecipes", ctx)}
+}
+
+func (_c *Querier_ListRecipes_Call) Run(run func(ctx context.Context)) *Querier_ListRecipes_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *Querier_ListRecipes_Call) Return(_a0 []v1.Recipe, _a1 error) *Querier_ListRecipes_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_ListRecipes_Call) RunAndReturn(run func(context.Context) ([]v1.Recipe, error)) *Querier_ListRecipes_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateGroceryItem provides a mock function with given fields: ctx, arg
 func (_m *Querier) UpdateGroceryItem(ctx context.Context, arg v1.UpdateGroceryItemParams) (v1.GroceryItem, error) {
 	ret := _m.Called(ctx, arg)
@@ -591,6 +1050,120 @@ func (_c *Querier_UpdateGroceryList_Call) Return(_a0 v1.GroceryList, _a1 error) 
 }
 
 func (_c *Querier_UpdateGroceryList_Call) RunAndReturn(run func(context.Context, v1.UpdateGroceryListParams) (v1.GroceryList, error)) *Querier_UpdateGroceryList_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateRecipe provides a mock function with given fields: ctx, arg
+func (_m *Querier) UpdateRecipe(ctx context.Context, arg v1.UpdateRecipeParams) (v1.Recipe, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateRecipe")
+	}
+
+	var r0 v1.Recipe
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, v1.UpdateRecipeParams) (v1.Recipe, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, v1.UpdateRecipeParams) v1.Recipe); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(v1.Recipe)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, v1.UpdateRecipeParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_UpdateRecipe_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateRecipe'
+type Querier_UpdateRecipe_Call struct {
+	*mock.Call
+}
+
+// UpdateRecipe is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg v1.UpdateRecipeParams
+func (_e *Querier_Expecter) UpdateRecipe(ctx interface{}, arg interface{}) *Querier_UpdateRecipe_Call {
+	return &Querier_UpdateRecipe_Call{Call: _e.mock.On("UpdateRecipe", ctx, arg)}
+}
+
+func (_c *Querier_UpdateRecipe_Call) Run(run func(ctx context.Context, arg v1.UpdateRecipeParams)) *Querier_UpdateRecipe_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(v1.UpdateRecipeParams))
+	})
+	return _c
+}
+
+func (_c *Querier_UpdateRecipe_Call) Return(_a0 v1.Recipe, _a1 error) *Querier_UpdateRecipe_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_UpdateRecipe_Call) RunAndReturn(run func(context.Context, v1.UpdateRecipeParams) (v1.Recipe, error)) *Querier_UpdateRecipe_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateRecipeIngredient provides a mock function with given fields: ctx, arg
+func (_m *Querier) UpdateRecipeIngredient(ctx context.Context, arg v1.UpdateRecipeIngredientParams) (v1.RecipeIngredient, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateRecipeIngredient")
+	}
+
+	var r0 v1.RecipeIngredient
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, v1.UpdateRecipeIngredientParams) (v1.RecipeIngredient, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, v1.UpdateRecipeIngredientParams) v1.RecipeIngredient); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(v1.RecipeIngredient)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, v1.UpdateRecipeIngredientParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Querier_UpdateRecipeIngredient_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateRecipeIngredient'
+type Querier_UpdateRecipeIngredient_Call struct {
+	*mock.Call
+}
+
+// UpdateRecipeIngredient is a helper method to define mock.On call
+//   - ctx context.Context
+//   - arg v1.UpdateRecipeIngredientParams
+func (_e *Querier_Expecter) UpdateRecipeIngredient(ctx interface{}, arg interface{}) *Querier_UpdateRecipeIngredient_Call {
+	return &Querier_UpdateRecipeIngredient_Call{Call: _e.mock.On("UpdateRecipeIngredient", ctx, arg)}
+}
+
+func (_c *Querier_UpdateRecipeIngredient_Call) Run(run func(ctx context.Context, arg v1.UpdateRecipeIngredientParams)) *Querier_UpdateRecipeIngredient_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(v1.UpdateRecipeIngredientParams))
+	})
+	return _c
+}
+
+func (_c *Querier_UpdateRecipeIngredient_Call) Return(_a0 v1.RecipeIngredient, _a1 error) *Querier_UpdateRecipeIngredient_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Querier_UpdateRecipeIngredient_Call) RunAndReturn(run func(context.Context, v1.UpdateRecipeIngredientParams) (v1.RecipeIngredient, error)) *Querier_UpdateRecipeIngredient_Call {
 	_c.Call.Return(run)
 	return _c
 }

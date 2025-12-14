@@ -1,0 +1,44 @@
+# Fly.io configuration for Octoback
+# See https://fly.io/docs/reference/configuration/ for reference
+
+app = "octoback"
+primary_region = "cdg"  # Paris - change to your preferred region
+
+[build]
+  # Uses the Dockerfile in the project root
+  dockerfile = "Dockerfile"
+  [build.args]
+    # These will be set during deploy via --build-arg or fly.io secrets
+    # VITE_AUTH0_DOMAIN = ""
+    # VITE_AUTH0_CLIENT_ID = ""
+    # VITE_AUTH0_AUDIENCE = ""
+
+[env]
+  PORT = "8080"
+  # Database path on the mounted volume
+  OCTOMEAL_DB_PATH = "/data/octoback.db"
+  # Static files directory
+  STATIC_DIR = "/app/static"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 250
+    soft_limit = 200
+
+# Persistent volume for SQLite database
+[mounts]
+  source = "octoback_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+

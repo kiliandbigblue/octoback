@@ -1,56 +1,55 @@
 -- name: GetGroceryList :one
-select *
-from GROCERY_LIST
-where ID = $1
-limit 1;
+SELECT *
+FROM grocery_list
+WHERE id = ? AND tenant_id = ?
+LIMIT 1;
 
 -- name: CreateGroceryList :one
-insert into GROCERY_LIST (NAME)
-values ($1)
-returning *;
+INSERT INTO grocery_list (name, tenant_id)
+VALUES (?, ?)
+RETURNING *;
 
 -- name: UpdateGroceryList :one
-update GROCERY_LIST
-set NAME = $2, VERSION = VERSION + 1
-where ID = $1 and VERSION = $3
-returning *;
+UPDATE grocery_list
+SET name = ?, version = version + 1
+WHERE id = ? AND tenant_id = ? AND version = ?
+RETURNING *;
 
 -- name: DeleteGroceryList :one
-delete
-from GROCERY_LIST
-where ID = $1
-returning *;
+DELETE FROM grocery_list
+WHERE id = ? AND tenant_id = ?
+RETURNING *;
 
 -- name: ListGroceryLists :many
-select *
-from GROCERY_LIST;
+SELECT *
+FROM grocery_list
+WHERE tenant_id = ?;
 
 -- name: GetGroceryItem :one
-select *
-from GROCERY_ITEM
-where ID = $1
-limit 1;
+SELECT gi.*
+FROM grocery_item gi
+JOIN grocery_list gl ON gi.grocery_list_id = gl.id
+WHERE gi.id = ? AND gl.tenant_id = ?
+LIMIT 1;
 
 -- name: CreateGroceryItem :one
-insert into GROCERY_ITEM (GROCERY_LIST_ID, NAME, QUANTITY, CHECKED)
-values ($1, $2, $3, $4)
-returning *;
+INSERT INTO grocery_item (grocery_list_id, name, quantity, checked)
+VALUES (?, ?, ?, ?)
+RETURNING *;
 
 -- name: UpdateGroceryItem :one
-update GROCERY_ITEM
-set NAME = $2, QUANTITY = $3, CHECKED = $4, VERSION = VERSION + 1
-where ID = $1 and VERSION = $5
-returning *;
+UPDATE grocery_item
+SET name = ?, quantity = ?, checked = ?, version = version + 1
+WHERE grocery_item.id = ? AND grocery_item.version = ?
+RETURNING *;
 
 -- name: DeleteGroceryItem :one
-delete
-from GROCERY_ITEM
-where ID = $1
-returning *;
+DELETE FROM grocery_item
+WHERE grocery_item.id = ?
+RETURNING *;
 
 -- name: ListGroceryItemsByGroceryList :many
-select *
-from GROCERY_ITEM
-where GROCERY_LIST_ID = $1;
-
-
+SELECT gi.*
+FROM grocery_item gi
+JOIN grocery_list gl ON gi.grocery_list_id = gl.id
+WHERE gi.grocery_list_id = ? AND gl.tenant_id = ?;

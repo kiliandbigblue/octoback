@@ -1,0 +1,141 @@
+syntax = "proto3";
+
+package octoback.recipes.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/field_mask.proto";
+import "octoback/recipes/v1/recipes.proto";
+
+option go_package = "github.com/kiliandbigblue/octoback/recipes/v1;recipes";
+
+// Service is the recipes service.
+service Service {
+    // Get a recipe.
+    rpc GetRecipe(GetRecipeRequest) returns (GetRecipeResponse);
+    // Create a recipe
+    rpc CreateRecipe(CreateRecipeRequest) returns (CreateRecipeResponse);
+    // Update a recipe
+    rpc UpdateRecipe(UpdateRecipeRequest) returns (UpdateRecipeResponse);
+    // List recipes
+    rpc ListRecipes(ListRecipesRequest) returns (ListRecipesResponse);
+    // Delete a recipe
+    rpc DeleteRecipe(DeleteRecipeRequest) returns (DeleteRecipeResponse);
+    // Get a recipe ingredient.
+    rpc GetRecipeIngredient(GetRecipeIngredientRequest) returns (GetRecipeIngredientResponse);
+    // Create a recipe ingredient
+    rpc CreateRecipeIngredient(CreateRecipeIngredientRequest) returns (CreateRecipeIngredientResponse);
+    // Update a recipe ingredient
+    rpc UpdateRecipeIngredient(UpdateRecipeIngredientRequest) returns (UpdateRecipeIngredientResponse);
+    // List recipe ingredients
+    rpc ListRecipeIngredients(ListRecipeIngredientsRequest) returns (ListRecipeIngredientsResponse);
+    // Delete a recipe ingredient
+    rpc DeleteRecipeIngredient(DeleteRecipeIngredientRequest) returns (DeleteRecipeIngredientResponse);
+}
+
+message GetRecipeRequest {
+    // The ID of the recipe to get.
+    int64 id = 1;
+}
+
+message GetRecipeResponse {
+    // The recipe.
+    Recipe recipe = 1;
+}
+
+message CreateRecipeRequest {
+    // The recipe name.
+    string name = 1 [(buf.validate.field).string.min_len = 1];
+    // The recipe description.
+    string description = 2;
+    // The number of servings.
+    int32 servings = 3;
+    // Preparation time in minutes.
+    int32 prep_time_minutes = 4;
+    // Cooking time in minutes.
+    int32 cook_time_minutes = 5;
+}
+
+message CreateRecipeResponse {
+    // The recipe.
+    Recipe recipe = 1;
+}
+
+message UpdateRecipeRequest {
+    // The recipe.
+    Recipe recipe = 1;
+    // The update mask.
+    google.protobuf.FieldMask update_mask = 2;
+}
+
+message UpdateRecipeResponse {
+    // The recipe.
+    Recipe recipe = 1;
+}
+
+message ListRecipesRequest {}
+
+message ListRecipesResponse {
+    repeated Recipe recipes = 1;
+}
+
+message DeleteRecipeRequest {
+    // The ID of the recipe to delete.
+    int64 id = 1;
+}
+
+message DeleteRecipeResponse {}
+
+message GetRecipeIngredientRequest {
+    // The ID of the recipe ingredient to get.
+    int64 id = 1;
+}
+
+message GetRecipeIngredientResponse {
+    // The recipe ingredient.
+    RecipeIngredient recipe_ingredient = 1;
+}
+
+message CreateRecipeIngredientRequest {
+    // The ID of the recipe to create the ingredient for.
+    int64 recipe = 1;
+    // The ingredient name.
+    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    // The ingredient quantity (e.g., "2", "1/2").
+    string quantity = 3;
+    // The ingredient unit (e.g., "cups", "tbsp").
+    string unit = 4;
+}
+
+message CreateRecipeIngredientResponse {
+    // The recipe ingredient.
+    RecipeIngredient recipe_ingredient = 1;
+}
+
+message UpdateRecipeIngredientRequest {
+    // The recipe ingredient.
+    RecipeIngredient recipe_ingredient = 1;
+    // The update mask.
+    google.protobuf.FieldMask update_mask = 2;
+}
+
+message UpdateRecipeIngredientResponse {
+    // The recipe ingredient.
+    RecipeIngredient recipe_ingredient = 1;
+}
+
+message ListRecipeIngredientsRequest {
+    // The ID of the recipe to list ingredients for.
+    int64 recipe = 1;
+}
+
+message ListRecipeIngredientsResponse {
+    repeated RecipeIngredient recipe_ingredients = 1;
+}
+
+message DeleteRecipeIngredientRequest {
+    // The ID of the recipe ingredient to delete.
+    int64 id = 1;
+}
+
+message DeleteRecipeIngredientResponse {}
+

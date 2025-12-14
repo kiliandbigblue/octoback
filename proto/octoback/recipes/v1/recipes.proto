@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package octoback.recipes.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/kiliandbigblue/octoback/recipes/v1;recipes";
+
+// Recipe represents a cooking recipe.
+message Recipe {
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
+    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    string description = 3 [(buf.validate.field).string.max_len = 1000];
+    int32 servings = 4 [(buf.validate.field).int32.gt = 0];
+    int32 prep_time_minutes = 5 [(buf.validate.field).int32.gte = 0];
+    int32 cook_time_minutes = 6 [(buf.validate.field).int32.gte = 0];
+    google.protobuf.Timestamp create_time = 7;
+    int32 version = 8;
+}
+
+// RecipeIngredient represents a single ingredient in a recipe.
+message RecipeIngredient {
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
+    int64 recipe = 2 [(buf.validate.field).int64.gt = 0];
+    string name = 3 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    string quantity = 4 [(buf.validate.field).string.max_len = 50];
+    string unit = 5 [(buf.validate.field).string.max_len = 50];
+    google.protobuf.Timestamp create_time = 6;
+    int32 version = 7;
+}
+

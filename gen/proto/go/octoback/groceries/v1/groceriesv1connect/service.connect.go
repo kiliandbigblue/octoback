@@ -63,21 +63,6 @@ const (
 	ServiceDeleteGroceryItemProcedure = "/octoback.groceries.v1.Service/DeleteGroceryItem"
 )
 
-// These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
-var (
-	serviceServiceDescriptor                 = v1.File_octoback_groceries_v1_service_proto.Services().ByName("Service")
-	serviceGetGroceryListMethodDescriptor    = serviceServiceDescriptor.Methods().ByName("GetGroceryList")
-	serviceCreateGroceryListMethodDescriptor = serviceServiceDescriptor.Methods().ByName("CreateGroceryList")
-	serviceUpdateGroceryListMethodDescriptor = serviceServiceDescriptor.Methods().ByName("UpdateGroceryList")
-	serviceListGroceryListsMethodDescriptor  = serviceServiceDescriptor.Methods().ByName("ListGroceryLists")
-	serviceDeleteGroceryListMethodDescriptor = serviceServiceDescriptor.Methods().ByName("DeleteGroceryList")
-	serviceGetGroceryItemMethodDescriptor    = serviceServiceDescriptor.Methods().ByName("GetGroceryItem")
-	serviceCreateGroceryItemMethodDescriptor = serviceServiceDescriptor.Methods().ByName("CreateGroceryItem")
-	serviceUpdateGroceryItemMethodDescriptor = serviceServiceDescriptor.Methods().ByName("UpdateGroceryItem")
-	serviceListGroceryItemsMethodDescriptor  = serviceServiceDescriptor.Methods().ByName("ListGroceryItems")
-	serviceDeleteGroceryItemMethodDescriptor = serviceServiceDescriptor.Methods().ByName("DeleteGroceryItem")
-)
-
 // ServiceClient is a client for the octoback.groceries.v1.Service service.
 type ServiceClient interface {
 	// Get the grocery list.
@@ -111,65 +96,66 @@ type ServiceClient interface {
 // http://api.acme.com or https://acme.com/grpc).
 func NewServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) ServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
+	serviceMethods := v1.File_octoback_groceries_v1_service_proto.Services().ByName("Service").Methods()
 	return &serviceClient{
 		getGroceryList: connect.NewClient[v1.GetGroceryListRequest, v1.GetGroceryListResponse](
 			httpClient,
 			baseURL+ServiceGetGroceryListProcedure,
-			connect.WithSchema(serviceGetGroceryListMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("GetGroceryList")),
 			connect.WithClientOptions(opts...),
 		),
 		createGroceryList: connect.NewClient[v1.CreateGroceryListRequest, v1.CreateGroceryListResponse](
 			httpClient,
 			baseURL+ServiceCreateGroceryListProcedure,
-			connect.WithSchema(serviceCreateGroceryListMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("CreateGroceryList")),
 			connect.WithClientOptions(opts...),
 		),
 		updateGroceryList: connect.NewClient[v1.UpdateGroceryListRequest, v1.UpdateGroceryListResponse](
 			httpClient,
 			baseURL+ServiceUpdateGroceryListProcedure,
-			connect.WithSchema(serviceUpdateGroceryListMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("UpdateGroceryList")),
 			connect.WithClientOptions(opts...),
 		),
 		listGroceryLists: connect.NewClient[v1.ListGroceryListsRequest, v1.ListGroceryListsResponse](
 			httpClient,
 			baseURL+ServiceListGroceryListsProcedure,
-			connect.WithSchema(serviceListGroceryListsMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("ListGroceryLists")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteGroceryList: connect.NewClient[v1.DeleteGroceryListRequest, v1.DeleteGroceryListResponse](
 			httpClient,
 			baseURL+ServiceDeleteGroceryListProcedure,
-			connect.WithSchema(serviceDeleteGroceryListMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("DeleteGroceryList")),
 			connect.WithClientOptions(opts...),
 		),
 		getGroceryItem: connect.NewClient[v1.GetGroceryItemRequest, v1.GetGroceryItemResponse](
 			httpClient,
 			baseURL+ServiceGetGroceryItemProcedure,
-			connect.WithSchema(serviceGetGroceryItemMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("GetGroceryItem")),
 			connect.WithClientOptions(opts...),
 		),
 		createGroceryItem: connect.NewClient[v1.CreateGroceryItemRequest, v1.CreateGroceryItemResponse](
 			httpClient,
 			baseURL+ServiceCreateGroceryItemProcedure,
-			connect.WithSchema(serviceCreateGroceryItemMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("CreateGroceryItem")),
 			connect.WithClientOptions(opts...),
 		),
 		updateGroceryItem: connect.NewClient[v1.UpdateGroceryItemRequest, v1.UpdateGroceryItemResponse](
 			httpClient,
 			baseURL+ServiceUpdateGroceryItemProcedure,
-			connect.WithSchema(serviceUpdateGroceryItemMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("UpdateGroceryItem")),
 			connect.WithClientOptions(opts...),
 		),
 		listGroceryItems: connect.NewClient[v1.ListGroceryItemsRequest, v1.ListGroceryItemsResponse](
 			httpClient,
 			baseURL+ServiceListGroceryItemsProcedure,
-			connect.WithSchema(serviceListGroceryItemsMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("ListGroceryItems")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteGroceryItem: connect.NewClient[v1.DeleteGroceryItemRequest, v1.DeleteGroceryItemResponse](
 			httpClient,
 			baseURL+ServiceDeleteGroceryItemProcedure,
-			connect.WithSchema(serviceDeleteGroceryItemMethodDescriptor),
+			connect.WithSchema(serviceMethods.ByName("DeleteGroceryItem")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -269,64 +255,65 @@ type ServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewServiceHandler(svc ServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	serviceMethods := v1.File_octoback_groceries_v1_service_proto.Services().ByName("Service").Methods()
 	serviceGetGroceryListHandler := connect.NewUnaryHandler(
 		ServiceGetGroceryListProcedure,
 		svc.GetGroceryList,
-		connect.WithSchema(serviceGetGroceryListMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("GetGroceryList")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceCreateGroceryListHandler := connect.NewUnaryHandler(
 		ServiceCreateGroceryListProcedure,
 		svc.CreateGroceryList,
-		connect.WithSchema(serviceCreateGroceryListMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("CreateGroceryList")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceUpdateGroceryListHandler := connect.NewUnaryHandler(
 		ServiceUpdateGroceryListProcedure,
 		svc.UpdateGroceryList,
-		connect.WithSchema(serviceUpdateGroceryListMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("UpdateGroceryList")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceListGroceryListsHandler := connect.NewUnaryHandler(
 		ServiceListGroceryListsProcedure,
 		svc.ListGroceryLists,
-		connect.WithSchema(serviceListGroceryListsMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("ListGroceryLists")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceDeleteGroceryListHandler := connect.NewUnaryHandler(
 		ServiceDeleteGroceryListProcedure,
 		svc.DeleteGroceryList,
-		connect.WithSchema(serviceDeleteGroceryListMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("DeleteGroceryList")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceGetGroceryItemHandler := connect.NewUnaryHandler(
 		ServiceGetGroceryItemProcedure,
 		svc.GetGroceryItem,
-		connect.WithSchema(serviceGetGroceryItemMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("GetGroceryItem")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceCreateGroceryItemHandler := connect.NewUnaryHandler(
 		ServiceCreateGroceryItemProcedure,
 		svc.CreateGroceryItem,
-		connect.WithSchema(serviceCreateGroceryItemMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("CreateGroceryItem")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceUpdateGroceryItemHandler := connect.NewUnaryHandler(
 		ServiceUpdateGroceryItemProcedure,
 		svc.UpdateGroceryItem,
-		connect.WithSchema(serviceUpdateGroceryItemMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("UpdateGroceryItem")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceListGroceryItemsHandler := connect.NewUnaryHandler(
 		ServiceListGroceryItemsProcedure,
 		svc.ListGroceryItems,
-		connect.WithSchema(serviceListGroceryItemsMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("ListGroceryItems")),
 		connect.WithHandlerOptions(opts...),
 	)
 	serviceDeleteGroceryItemHandler := connect.NewUnaryHandler(
 		ServiceDeleteGroceryItemProcedure,
 		svc.DeleteGroceryItem,
-		connect.WithSchema(serviceDeleteGroceryItemMethodDescriptor),
+		connect.WithSchema(serviceMethods.ByName("DeleteGroceryItem")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/octoback.groceries.v1.Service/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
