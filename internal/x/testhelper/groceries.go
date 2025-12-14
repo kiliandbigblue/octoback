@@ -29,7 +29,7 @@ func FakeStoreGroceryList() store.GroceryList {
 	return store.GroceryList{
 		ID:        FakeGroceryListID(),
 		Name:      fake.Characters(),
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
 		Version:   1,
 	}
 }
@@ -46,7 +46,7 @@ func FakeGroceryItem(groceryList int64) *models.GroceryItem {
 		GroceryList: groceryList,
 		Name:        fake.Characters(),
 		Quantity:    int32(qty.Int64() + 1),
-		Checked:     bool(checked.Int64()%2 == 0),
+		Checked:     checked.Int64()%2 == 0,
 		CreateTime:  timestamppb.Now(),
 		Version:     1,
 	}
@@ -59,9 +59,9 @@ func FakeStoreGroceryItem(groceryList int64) store.GroceryItem {
 		ID:            FakeGroceryItemID(),
 		GroceryListID: groceryList,
 		Name:          fake.Characters(),
-		Quantity:      int32(qty.Int64() + 1),
-		Checked:       bool(checked.Int64()%2 == 0),
-		CreatedAt:     time.Now(),
+		Quantity:      qty.Int64() + 1,
+		Checked:       checked.Int64() % 2,
+		CreatedAt:     time.Now().Format("2006-01-02 15:04:05"),
 		Version:       1,
 	}
 }

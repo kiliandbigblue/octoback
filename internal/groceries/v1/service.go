@@ -163,8 +163,8 @@ func (s *Service) CreateGroceryItem(ctx context.Context, r *connect.Request[mode
 	git, err := s.querier.CreateGroceryItem(ctx, store.CreateGroceryItemParams{
 		GroceryListID: r.Msg.GetGroceryList(),
 		Name:          r.Msg.GetName(),
-		Quantity:      r.Msg.GetQuantity(),
-		Checked:       r.Msg.GetChecked(),
+		Quantity:      int64(r.Msg.GetQuantity()),
+		Checked:       boolToInt64(r.Msg.GetChecked()),
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -206,10 +206,10 @@ func (s *Service) UpdateGroceryItem(ctx context.Context, r *connect.Request[mode
 		git.Name = r.Msg.GetGroceryItem().GetName()
 	}
 	if _, ok := fields["quantity"]; ok {
-		git.Quantity = r.Msg.GetGroceryItem().GetQuantity()
+		git.Quantity = int64(r.Msg.GetGroceryItem().GetQuantity())
 	}
 	if _, ok := fields["checked"]; ok {
-		git.Checked = r.Msg.GetGroceryItem().GetChecked()
+		git.Checked = boolToInt64(r.Msg.GetGroceryItem().GetChecked())
 	}
 
 	if _, err := s.querier.UpdateGroceryItem(ctx, store.UpdateGroceryItemParams{

@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
+	_ "modernc.org/sqlite"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
@@ -25,23 +25,19 @@ import (
 
 // The config struct holds configuration for the server.
 type config struct {
-	port string
-	db   struct {
-		dsn          string
-		maxOpenConns int
-		maxIdleConns int
-		maxIdleTime  string
-	}
+	port   string
+	dbPath string
 }
 
 func main() {
 	var cfg config
 	flag.StringVar(&cfg.port, "port", os.Getenv("PORT"), "port to listen on")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("OCTOMEAL_DB_DSN"), "PostgreSQL DSN")
-	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
-	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
-	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+	flag.StringVar(&cfg.dbPath, "db-path", os.Getenv("OCTOMEAL_DB_PATH"), "SQLite database file path")
 	flag.Parse()
+
+	if cfg.dbPath == "" {
+		cfg.dbPath = "octoback.db"
+	}
 
 	log, err := cloudzap.NewLogger(cloudzap.LoggerConfig{
 		Development: false,
@@ -58,7 +54,7 @@ func main() {
 	defer func() {
 		_ = db.Close()
 	}()
-	log.Info("database connection pool established")
+	log.Info("database connection established", zap.String("path", cfg.dbPath))
 
 	cs := v1.NewService(store.New(db))
 
@@ -88,19 +84,15 @@ func main() {
 }
 
 func openDB(cfg config) (*sql.DB, error) {
-	db, err := sql.Open("postgres", cfg.db.dsn)
+	db, err := sql.Open("sqlite", cfg.dbPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open database")
 	}
 
-	db.SetMaxOpenConns(cfg.db.maxOpenConns)
-	db.SetMaxIdleConns(cfg.db.maxIdleConns)
-
-	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse max idle time")
+	// Enable foreign keys for SQLite
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		return nil, errors.Wrap(err, "failed to enable foreign keys")
 	}
-	db.SetConnMaxIdleTime(duration)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

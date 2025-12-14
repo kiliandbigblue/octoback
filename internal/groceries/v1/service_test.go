@@ -15,7 +15,6 @@ import (
 	"github.com/kiliandbigblue/octoback/internal/x/testhelper"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -50,12 +49,7 @@ func (s *serviceTestSuite) TestGetGroceryList_OK() {
 		Id: gl.ID,
 	}))
 	s.NoError(err)
-	s.Equal(&models.GroceryList{
-		Id:         gl.ID,
-		Name:       gl.Name,
-		CreateTime: timestamppb.New(gl.CreatedAt),
-		Version:    gl.Version,
-	}, response.Msg.GetGroceryList())
+	s.Equal(translateGroceryList(gl), response.Msg.GetGroceryList())
 }
 
 // Test that we get a NotFound error when the grocery list does not exist.
@@ -77,7 +71,7 @@ func (s *serviceTestSuite) TestCreateGroceryList_Ok() {
 	s.querier.EXPECT().CreateGroceryList(s.ctx, name).Return(store.GroceryList{
 		ID:        testhelper.FakeGroceryListID(),
 		Name:      name,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
 		Version:   1,
 	}, nil)
 
@@ -195,15 +189,7 @@ func (s *serviceTestSuite) TestGetGroceryItem_OK() {
 		Id: gl.ID,
 	}))
 	s.NoError(err)
-	s.Equal(&models.GroceryItem{
-		Id:          gl.ID,
-		GroceryList: gl.GroceryListID,
-		Name:        gl.Name,
-		Quantity:    gl.Quantity,
-		Checked:     gl.Checked,
-		CreateTime:  timestamppb.New(gl.CreatedAt),
-		Version:     gl.Version,
-	}, response.Msg.GetGroceryItem())
+	s.Equal(translateGroceryItem(gl), response.Msg.GetGroceryItem())
 }
 
 // Test that we get a NotFound error when the grocery item does not exist.
@@ -233,8 +219,8 @@ func (s *serviceTestSuite) TestCreateGroceryItem_Ok() {
 	response, err := s.s.CreateGroceryItem(s.ctx, connect.NewRequest(&models.CreateGroceryItemRequest{
 		GroceryList: gil,
 		Name:        git.Name,
-		Quantity:    git.Quantity,
-		Checked:     git.Checked,
+		Quantity:    int32(git.Quantity),
+		Checked:     git.Checked != 0,
 	}))
 	s.NoError(err)
 	s.NotEmpty(response.Msg.GetGroceryItem().GetId())
@@ -259,7 +245,7 @@ func (s *serviceTestSuite) TestUpdateGroceryItem_Ok() {
 	input := actual
 	input.Name = actual.Name + " updated"
 	input.Quantity = actual.Quantity + 1
-	input.Checked = !actual.Checked
+	input.Checked = 1 - actual.Checked // Toggle between 0 and 1
 
 	s.querier.EXPECT().GetGroceryItem(s.ctx, actual.ID).Return(actual, nil)
 
