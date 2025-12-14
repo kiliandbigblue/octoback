@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package octoback.tenants.v1;
+
+import "octoback/tenants/v1/tenants.proto";
+
+option go_package = "github.com/kiliandbigblue/octoback/tenants/v1;tenants";
+
+// Service is the tenants service.
+service Service {
+    // ListTenants lists all available tenants.
+    rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+    // GetMyTenants lists tenants the current user is a member of.
+    rpc GetMyTenants(GetMyTenantsRequest) returns (GetMyTenantsResponse);
+    // JoinTenant adds the current user to a tenant.
+    rpc JoinTenant(JoinTenantRequest) returns (JoinTenantResponse);
+    // LeaveTenant removes the current user from a tenant.
+    rpc LeaveTenant(LeaveTenantRequest) returns (LeaveTenantResponse);
+}
+
+message ListTenantsRequest {}
+
+message ListTenantsResponse {
+    repeated Tenant tenants = 1;
+}
+
+message GetMyTenantsRequest {}
+
+message GetMyTenantsResponse {
+    repeated TenantMembership memberships = 1;
+    repeated Tenant tenants = 2;
+}
+
+message JoinTenantRequest {
+    // The ID of the tenant to join.
+    int64 tenant_id = 1;
+}
+
+message JoinTenantResponse {
+    // The membership that was created.
+    TenantMembership membership = 1;
+}
+
+message LeaveTenantRequest {
+    // The ID of the tenant to leave.
+    int64 tenant_id = 1;
+}
+
+message LeaveTenantResponse {}
+

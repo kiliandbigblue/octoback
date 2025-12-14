@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package octoback.tenants.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/kiliandbigblue/octoback/tenants/v1;tenants";
+
+// Tenant represents a household or group that shares grocery lists and recipes.
+message Tenant {
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
+    string name = 2 [(buf.validate.field).string = { min_len: 1, max_len: 100 }];
+    google.protobuf.Timestamp create_time = 3;
+    int32 version = 4;
+}
+
+// TenantMembership represents a user's membership in a tenant.
+message TenantMembership {
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
+    int64 tenant_id = 2 [(buf.validate.field).int64.gt = 0];
+    string user_id = 3 [(buf.validate.field).string.min_len = 1];
+    string role = 4; // owner, admin, or member
+    google.protobuf.Timestamp create_time = 5;
+}
+

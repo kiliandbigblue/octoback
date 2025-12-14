@@ -1,4 +1,5 @@
 import { Avatar, Button, Group, Loader, Menu, Text, UnstyledButton } from '@mantine/core';
+import { Link } from 'react-router-dom';
 import { useAuth0 } from '../../lib/auth0';
 
 /**
@@ -34,6 +35,9 @@ export function AuthButton() {
             </Text>
           </Menu.Item>
           <Menu.Divider />
+          <Menu.Item component={Link} to="/settings">
+            Paramètres
+          </Menu.Item>
           <Menu.Item
             color="red"
             onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}

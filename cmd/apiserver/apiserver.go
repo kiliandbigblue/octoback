@@ -15,9 +15,11 @@ import (
 	"connectrpc.com/validate"
 	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/groceries/v1/groceriesv1connect"
 	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/recipes/v1/recipesv1connect"
+	"github.com/kiliandbigblue/octoback/gen/proto/go/octoback/tenants/v1/tenantsv1connect"
 	store "github.com/kiliandbigblue/octoback/gen/store/v1"
 	groceriesv1 "github.com/kiliandbigblue/octoback/internal/groceries/v1"
 	recipesv1 "github.com/kiliandbigblue/octoback/internal/recipes/v1"
+	tenantsv1 "github.com/kiliandbigblue/octoback/internal/tenants/v1"
 	"github.com/kiliandbigblue/octoback/internal/x/auth0"
 	"github.com/kiliandbigblue/octoback/internal/x/cloudzap"
 	"github.com/kiliandbigblue/octoback/internal/x/tenant"
@@ -85,6 +87,7 @@ func main() {
 	querier := store.New(db)
 	groceriesSvc := groceriesv1.NewService(querier)
 	recipesSvc := recipesv1.NewService(querier)
+	tenantsSvc := tenantsv1.NewService(querier)
 
 	vi, err := validate.NewInterceptor()
 	if err != nil {
@@ -107,6 +110,11 @@ func main() {
 	mux.Handle(groceriesPath, groceriesHandler)
 	recipesPath, recipesHandler := recipesv1connect.NewServiceHandler(recipesSvc, interceptors)
 	mux.Handle(recipesPath, recipesHandler)
+
+	// Tenant service uses only auth interceptor (no tenant context needed)
+	tenantInterceptors := connect.WithInterceptors(ai, li, vi)
+	tenantsPath, tenantsHandler := tenantsv1connect.NewServiceHandler(tenantsSvc, tenantInterceptors)
+	mux.Handle(tenantsPath, tenantsHandler)
 
 	// Wrap with CORS middleware to allow Authorization header
 	handler := auth0.CORSMiddleware(h2c.NewHandler(mux, &http2.Server{}))
